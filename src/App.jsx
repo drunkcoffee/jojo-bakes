@@ -1,4 +1,4 @@
-import { useMemo, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import "./App.css";
 
 const WHATSAPP_NUMBER = "601110788823";
@@ -67,6 +67,10 @@ const translations = {
     footerNote: "仅限自取 · 摆摊地点会根据日期自动显示 · 星期二休息",
     footerHours: "营业时间 6:30 PM – 10:30 PM",
     footerCta: "WhatsApp 下单",
+    paymentMethod: "付款方式",
+    cashPayment: "现金支付",
+    qrPayment: "QR 支付",
+    qrNote: "选择 QR 支付后，我们会在 WhatsApp 人工发送收款二维码给你。",
   },
   en: {
     subtitle: "Stall Pre-order · Self Pickup",
@@ -131,6 +135,10 @@ const translations = {
     footerNote: "Self pickup only · Stall location changes by date · Tuesday closed",
     footerHours: "Business Hours 6:30 PM – 10:30 PM",
     footerCta: "WhatsApp Order",
+    paymentMethod: "Payment Method",
+    cashPayment: "Cash Payment",
+    qrPayment: "QR Payment",
+    qrNote: "If you choose QR payment, we will send you the payment QR manually via WhatsApp.",
   },
 };
 
@@ -275,6 +283,38 @@ function getTodayString() {
   const now = new Date();
   return `${now.getFullYear()}-${String(now.getMonth() + 1).padStart(2, "0")}-${String(now.getDate()).padStart(2, "0")}`;
 }
+function roundUpToNextFiveMinutes(totalMinutes) {
+  return Math.ceil(totalMinutes / 5) * 5;
+}
+
+function getAvailablePickupTimes(dateStr, allTimes) {
+  if (!dateStr) return allTimes;
+
+  const now = new Date();
+  const selectedDate = new Date(`${dateStr}T00:00:00`);
+
+  const isToday =
+    selectedDate.getFullYear() === now.getFullYear() &&
+    selectedDate.getMonth() === now.getMonth() &&
+    selectedDate.getDate() === now.getDate();
+
+  if (!isToday) return allTimes;
+
+  const currentMinutes = now.getHours() * 60 + now.getMinutes();
+  const earliestMinutes = roundUpToNextFiveMinutes(currentMinutes + 10);
+
+  return allTimes.filter((time) => {
+    const [timePart, suffix] = time.split(" ");
+    let [hour, minute] = timePart.split(":").map(Number);
+
+    if (suffix === "PM" && hour !== 12) hour += 12;
+    if (suffix === "AM" && hour === 12) hour = 0;
+
+    const total = hour * 60 + minute;
+    return total >= earliestMinutes;
+  });
+}
+
 function getPickupDetails(dateStr, lang) {
   if (!dateStr) return { dayIndex: null, dayLabel: "-", locationLabel: "-", closed: false };
   const date = new Date(`${dateStr}T12:00:00`);
@@ -285,7 +325,7 @@ function getPickupDetails(dateStr, lang) {
   const locationLabel = closed ? translations[lang].closed : getText(lang, location);
   return { dayIndex, dayLabel, locationLabel, closed };
 }
-function buildOrderMessage({ lang, items, pickupDate, pickupTime, pickupDay, pickupLocation }) {
+function buildOrderMessage({ lang, items, pickupDate, pickupTime, pickupDay, pickupLocation, paymentMethod }) {
   const t = translations[lang];
   const lines = [];
   lines.push(lang === "zh" ? "Hi JojoBakes，我想下单：" : "Hi JojoBakes, I would like to place an order:");
@@ -306,6 +346,7 @@ function buildOrderMessage({ lang, items, pickupDate, pickupTime, pickupDay, pic
   });
   const total = items.reduce((sum, item) => sum + item.subtotal, 0);
   lines.push("");
+  lines.push(`${t.paymentMethod}: ${paymentMethod === "qr" ? t.qrPayment : t.cashPayment}`);
   lines.push(`${t.total}: ${formatPrice(total)}`);
   lines.push("");
   lines.push(t.reminder);
@@ -331,9 +372,14 @@ export default function App() {
   const [selectedMochiOption2, setSelectedMochiOption2] = useState("");
   const [mochiQuantity, setMochiQuantity] = useState(1);
   const [orderItems, setOrderItems] = useState([]);
+  const [paymentMethod, setPaymentMethod] = useState("cash");
 
   const t = translations[lang];
   const pickupDetails = useMemo(() => getPickupDetails(pickupDate, lang), [pickupDate, lang]);
+  const availablePickupTimes = useMemo(() => {
+    return getAvailablePickupTimes(pickupDate, pickupTimes);
+  }, [pickupDate]);
+  const noAvailableTime = availablePickupTimes.length === 0;
   const selectedToppingObj = toppingOptions.find((item) => item.id === selectedTopping) || toppingOptions[0];
 
   const activeItem = useMemo(() => {
@@ -352,6 +398,14 @@ export default function App() {
 
   const currentMochiTier = mochiTiers[mochiTier];
   const currentMochiSubtotal = currentMochiTier.price * mochiQuantity;
+
+  useEffect(() => {
+    if (availablePickupTimes.length === 0) return;
+
+    if (!availablePickupTimes.includes(pickupTime)) {
+      setPickupTime(availablePickupTimes[0]);
+    }
+  }, [availablePickupTimes, pickupTime]);
 
   function handleCategoryChange(nextCategory) {
     setCategory(nextCategory);
@@ -500,12 +554,18 @@ export default function App() {
         <div className="schedule-grid">
           <label className="field">
             <span>{t.date}</span>
-            <input type="date" value={pickupDate} onChange={(e) => setPickupDate(e.target.value)} />
+            <input
+              type="date"
+              min={getTodayString()}
+              max={getTodayString()}
+              value={pickupDate}
+              onChange={(e) => setPickupDate(e.target.value)}
+            />
           </label>
           <label className="field">
             <span>{t.time}</span>
-            <select value={pickupTime} onChange={(e) => setPickupTime(e.target.value)}>
-              {pickupTimes.map((time) => <option value={time} key={time}>{time}</option>)}
+            <select value={pickupTime} onChange={(e) => setPickupTime(e.target.value)} disabled={noAvailableTime}>
+              {availablePickupTimes.map((time) => <option value={time} key={time}>{time}</option>)}
             </select>
           </label>
           <div className="info-box">
@@ -524,6 +584,13 @@ export default function App() {
           </div>
         </div>
         {pickupDetails.closed && <p className="closed-note">{t.closedNote}</p>}
+        {noAvailableTime && !pickupDetails.closed && (
+          <p className="closed-note">
+            {lang === "zh"
+              ? "今天可预约时间已结束，请选择其他日期。"
+              : "Today's pickup slots are no longer available. Please choose another date."}
+          </p>
+        )}
       </section>
 
       <section className="section-card" id="order-section">
@@ -732,8 +799,31 @@ export default function App() {
               </div>
             </div>
           )}
+          <div className="payment-card">
+            <h3>{t.paymentMethod}</h3>
+            <div className="payment-options">
+              <button
+                type="button"
+                className={`choice-button ${paymentMethod === "cash" ? "active" : ""}`}
+                onClick={() => setPaymentMethod("cash")}
+              >
+                {t.cashPayment}
+              </button>
+              <button
+                type="button"
+                className={`choice-button ${paymentMethod === "qr" ? "active" : ""}`}
+                onClick={() => setPaymentMethod("qr")}
+              >
+                {t.qrPayment}
+              </button>
+            </div>
+            {paymentMethod === "qr" && (
+              <p className="payment-note">{t.qrNote}</p>
+            )}
+          </div>
+
           <p className="help-text">{t.reminder}</p>
-          <button className="checkout-button" onClick={handleWhatsAppCheckout} disabled={pickupDetails.closed}>{t.orderNow}</button>
+          <button className="checkout-button" onClick={handleWhatsAppCheckout} disabled={pickupDetails.closed || noAvailableTime}>{t.orderNow}</button>
         </div>
       </section>
 

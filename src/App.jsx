@@ -1,4 +1,4 @@
-import { useEffect, useMemo, useState } from "react";
+import { useMemo, useState } from "react";
 import "./App.css";
 
 const WHATSAPP_NUMBER = "601110788823";
@@ -380,6 +380,10 @@ export default function App() {
     return getAvailablePickupTimes(pickupDate, pickupTimes);
   }, [pickupDate]);
   const noAvailableTime = availablePickupTimes.length === 0;
+  const todayOnlyInvalid = pickupDate !== getTodayString();
+  const effectivePickupTime = availablePickupTimes.includes(pickupTime)
+    ? pickupTime
+    : availablePickupTimes[0] || "";
   const selectedToppingObj = toppingOptions.find((item) => item.id === selectedTopping) || toppingOptions[0];
 
   const activeItem = useMemo(() => {
@@ -398,14 +402,6 @@ export default function App() {
 
   const currentMochiTier = mochiTiers[mochiTier];
   const currentMochiSubtotal = currentMochiTier.price * mochiQuantity;
-
-  useEffect(() => {
-    if (availablePickupTimes.length === 0) return;
-
-    if (!availablePickupTimes.includes(pickupTime)) {
-      setPickupTime(availablePickupTimes[0]);
-    }
-  }, [availablePickupTimes, pickupTime]);
 
   function handleCategoryChange(nextCategory) {
     setCategory(nextCategory);
@@ -470,7 +466,7 @@ export default function App() {
   }
 
   function handleWhatsAppCheckout() {
-    if (!pickupDate || pickupDetails.closed || orderItems.length === 0) {
+    if (!pickupDate || pickupDetails.closed || todayOnlyInvalid || orderItems.length === 0) {
       alert(lang === "zh" ? "请先完成日期和商品。" : "Please complete date and items first.");
       return;
     }
@@ -560,11 +556,16 @@ export default function App() {
               max={getTodayString()}
               value={pickupDate}
               onChange={(e) => setPickupDate(e.target.value)}
+              className={todayOnlyInvalid ? "date-input-invalid" : ""}
             />
           </label>
           <label className="field">
             <span>{t.time}</span>
-            <select value={pickupTime} onChange={(e) => setPickupTime(e.target.value)} disabled={noAvailableTime}>
+            <select
+              value={effectivePickupTime}
+              onChange={(e) => setPickupTime(e.target.value)}
+              disabled={noAvailableTime || todayOnlyInvalid}
+            >
               {availablePickupTimes.map((time) => <option value={time} key={time}>{time}</option>)}
             </select>
           </label>
@@ -584,7 +585,14 @@ export default function App() {
           </div>
         </div>
         {pickupDetails.closed && <p className="closed-note">{t.closedNote}</p>}
-        {noAvailableTime && !pickupDetails.closed && (
+        {todayOnlyInvalid && (
+          <p className="closed-note">
+            {lang === "zh"
+              ? "目前只开放当天预订，请选择今天。"
+              : "Only same-day orders are available. Please select today."}
+          </p>
+        )}
+        {noAvailableTime && !pickupDetails.closed && !todayOnlyInvalid && (
           <p className="closed-note">
             {lang === "zh"
               ? "今天可预约时间已结束，请选择其他日期。"
@@ -823,7 +831,7 @@ export default function App() {
           </div>
 
           <p className="help-text">{t.reminder}</p>
-          <button className="checkout-button" onClick={handleWhatsAppCheckout} disabled={pickupDetails.closed || noAvailableTime}>{t.orderNow}</button>
+          <button className="checkout-button" onClick={handleWhatsAppCheckout} disabled={pickupDetails.closed || noAvailableTime || todayOnlyInvalid}>{t.orderNow}</button>
         </div>
       </section>
 

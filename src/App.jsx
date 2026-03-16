@@ -7,7 +7,7 @@ const translations = {
   zh: {
     subtitle: "摆摊预订 · 自取下单",
     heroText:
-      "现做华夫饼、麻薯华夫饼和饮料。先看菜单，再直接下单。选择日期后会自动显示当天摆摊地点，星期二休息。",
+      "现做华夫饼、麻薯华夫饼和饮料。网页会自动显示今天的摆摊地点与可取货时间，直接选餐后 WhatsApp 下单即可。",
     lang: "EN",
     viewMenu: "浏览完整菜单",
     orderNowTop: "立即下单",
@@ -15,8 +15,8 @@ const translations = {
     featuredText: "先看热卖，再往下快速下单。",
     fullMenuTitle: "完整菜单",
     fullMenuText: "先浏览 waffle、麻薯华夫饼与饮料菜单，再往下快速下单。",
-    scheduleTitle: "选择日期与取货时间",
-    date: "选择日期",
+    scheduleTitle: "今日地点与取货时间",
+    date: "今日日期",
     time: "预计取货时间",
     day: "星期",
     location: "取货地点",
@@ -75,7 +75,7 @@ const translations = {
   en: {
     subtitle: "Stall Pre-order · Self Pickup",
     heroText:
-      "Fresh waffles, mochi waffles, and drinks made to order. Browse the menu first, then place your order directly. Pickup location changes automatically by date, and Tuesday is unavailable.",
+      "Fresh waffles, mochi waffles, and drinks made to order. Today’s stall location and available pickup times are shown automatically, so you can order directly via WhatsApp.",
     lang: "中文",
     viewMenu: "Browse Menu",
     orderNowTop: "Order Now",
@@ -83,8 +83,8 @@ const translations = {
     featuredText: "See the top picks first, then order below.",
     fullMenuTitle: "Full Menu",
     fullMenuText: "Browse our waffle, mochi waffle, and drinks menu before placing your order below.",
-    scheduleTitle: "Select Date & Pickup Time",
-    date: "Select Date",
+    scheduleTitle: "Today’s Location & Pickup Time",
+    date: "Today",
     time: "Preferred Pickup Time",
     day: "Day",
     location: "Pickup Location",
@@ -355,7 +355,7 @@ function buildOrderMessage({ lang, items, pickupDate, pickupTime, pickupDay, pic
 
 export default function App() {
   const [lang, setLang] = useState("zh");
-  const [pickupDate, setPickupDate] = useState(getTodayString());
+  const pickupDate = getTodayString();
   const [pickupTime, setPickupTime] = useState(pickupTimes[0]);
   const [category, setCategory] = useState("classic");
   const [classicFlavour1, setClassicFlavour1] = useState(classicItems[0].id);
@@ -380,7 +380,7 @@ export default function App() {
     return getAvailablePickupTimes(pickupDate, pickupTimes);
   }, [pickupDate]);
   const noAvailableTime = availablePickupTimes.length === 0;
-  const todayOnlyInvalid = pickupDate !== getTodayString();
+  const todayOnlyInvalid = false;
   const effectivePickupTime = availablePickupTimes.includes(pickupTime)
     ? pickupTime
     : availablePickupTimes[0] || "";
@@ -466,7 +466,7 @@ export default function App() {
   }
 
   function handleWhatsAppCheckout() {
-    if (!pickupDate || pickupDetails.closed || todayOnlyInvalid || orderItems.length === 0) {
+    if (pickupDetails.closed || orderItems.length === 0) {
       alert(lang === "zh" ? "请先完成日期和商品。" : "Please complete date and items first.");
       return;
     }
@@ -548,23 +548,16 @@ export default function App() {
       <section className="section-card">
         <div className="section-head"><h2>{t.scheduleTitle}</h2></div>
         <div className="schedule-grid">
-          <label className="field">
-            <span>{t.date}</span>
-            <input
-              type="date"
-              min={getTodayString()}
-              max={getTodayString()}
-              value={pickupDate}
-              onChange={(e) => setPickupDate(e.target.value)}
-              className={todayOnlyInvalid ? "date-input-invalid" : ""}
-            />
-          </label>
+          <div className="info-box">
+            <small>{t.date}</small>
+            <strong>{pickupDate}</strong>
+          </div>
           <label className="field">
             <span>{t.time}</span>
             <select
               value={effectivePickupTime}
               onChange={(e) => setPickupTime(e.target.value)}
-              disabled={noAvailableTime || todayOnlyInvalid}
+              disabled={noAvailableTime || pickupDetails.closed}
             >
               {availablePickupTimes.map((time) => <option value={time} key={time}>{time}</option>)}
             </select>
@@ -585,13 +578,6 @@ export default function App() {
           </div>
         </div>
         {pickupDetails.closed && <p className="closed-note">{t.closedNote}</p>}
-        {todayOnlyInvalid && (
-          <p className="closed-note">
-            {lang === "zh"
-              ? "目前只开放当天预订，请选择今天。"
-              : "Only same-day orders are available. Please select today."}
-          </p>
-        )}
         {noAvailableTime && !pickupDetails.closed && !todayOnlyInvalid && (
           <p className="closed-note">
             {lang === "zh"
@@ -831,7 +817,7 @@ export default function App() {
           </div>
 
           <p className="help-text">{t.reminder}</p>
-          <button className="checkout-button" onClick={handleWhatsAppCheckout} disabled={pickupDetails.closed || noAvailableTime || todayOnlyInvalid}>{t.orderNow}</button>
+          <button className="checkout-button" onClick={handleWhatsAppCheckout} disabled={pickupDetails.closed || noAvailableTime}>{t.orderNow}</button>
         </div>
       </section>
 

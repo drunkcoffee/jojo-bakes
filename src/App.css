@@ -197,4 +197,10 @@ a { text-decoration: none; color: inherit; }
   }
 }
 
+.date-input-invalid {
+  border: 1px solid #e16b6b !important;
+  background: #fff3f3 !important;
+  color: #a94442 !important;
+}
+
 }

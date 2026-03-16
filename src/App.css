@@ -203,4 +203,31 @@ a { text-decoration: none; color: inherit; }
   color: #a94442 !important;
 }
 
+.hero-gallery {
+  width: 100%;
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 12px;
+}
+
+.hero-gallery-card {
+  border-radius: 22px;
+  overflow: hidden;
+  background: #fff8f3;
+  border: 1px solid #efddd2;
+}
+
+.hero-gallery-image {
+  width: 100%;
+  aspect-ratio: 1 / 1;
+  object-fit: cover;
+  display: block;
+}
+
+@media (max-width: 640px) {
+  .hero-gallery {
+    grid-template-columns: 1fr;
+  }
+}
+
 }

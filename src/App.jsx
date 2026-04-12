@@ -1,8 +1,14 @@
-import { useMemo, useState } from "react";
+import { useMemo, useState, useCallback } from "react";
 import "./App.css";
 
+// ─── Constants ────────────────────────────────────────────────────────────────
 const WHATSAPP_NUMBER = "601110788823";
+const instagramUrl = "https://instagram.com/jojo.bakess";
+const whatsappUrl = `https://wa.me/${WHATSAPP_NUMBER}`;
+const CLASSIC_PRICE = 5;
+const ADVANCE_DAYS = 7; // how many days ahead users can book
 
+// ─── Translations ─────────────────────────────────────────────────────────────
 const translations = {
   zh: {
     subtitle: "摆摊预订 · 自取下单",
@@ -15,13 +21,13 @@ const translations = {
     featuredText: "先看热卖，再往下快速下单。",
     fullMenuTitle: "完整菜单",
     fullMenuText: "先浏览 waffle、麻薯华夫饼与饮料菜单，再往下快速下单。",
-    scheduleTitle: "今日地点与取货时间",
-    date: "今日日期",
+    scheduleTitle: "选择日期与取货时间",
+    date: "日期",
     time: "预计取货时间",
     day: "星期",
     location: "取货地点",
     closed: "休息 / 不营业",
-    closedNote: "星期二休息，请选择其他日期。",
+    closedNote: "星期三休息，请选择其他日期。",
     businessHours: "营业时间",
     businessHoursValue: "6:45 PM - 10:30 PM",
     categoryTitle: "选择类别",
@@ -36,6 +42,7 @@ const translations = {
     qty: "数量",
     subtotal: "小计",
     addToOrder: "加入订单",
+    added: "✓ 已加入！",
     noTopping: "不加酱",
     mochiStep1: "Step 1：选择麻薯方式",
     mochiStep2: "Step 2：选择口味等级",
@@ -53,6 +60,7 @@ const translations = {
     orderGuide2: "再选类别、口味、数量与加料",
     orderGuide3: "最后按 WhatsApp 下单",
     remove: "删除",
+    confirmRemove: "确定要删除这个商品吗？",
     total: "总计",
     chooseFirst: "请先完成必填选择",
     instagram: "Instagram",
@@ -64,32 +72,35 @@ const translations = {
     lessSweet: "少甜",
     flavourLine: "口味",
     footerTag: "让你食指大动的美食",
-    footerNote: "仅限自取 · 摆摊地点会根据日期自动显示 · 星期二休息",
+    footerNote: "仅限自取 · 摆摊地点会根据日期自动显示 · 星期三休息",
     footerHours: "营业时间 6:45 PM – 10:30 PM",
     footerCta: "WhatsApp 下单",
     paymentMethod: "付款方式",
     cashPayment: "现金支付",
     qrPayment: "QR 支付",
     qrNote: "选择 QR 支付后，我们会在 WhatsApp 人工发送收款二维码给你。",
+    noSlotsToday: "今天可预约时间已结束，请选择其他日期。",
+    itemsInCart: "件商品",
   },
   en: {
     subtitle: "Stall Pre-order · Self Pickup",
     heroText:
-      "Fresh waffles, mochi waffles, and drinks made to order. Today’s stall location and available pickup times are shown automatically, so you can order directly via WhatsApp.",
+      "Fresh waffles, mochi waffles, and drinks made to order. Today's stall location and available pickup times are shown automatically, so you can order directly via WhatsApp.",
     lang: "中文",
     viewMenu: "Browse Menu",
     orderNowTop: "Order Now",
     featuredTitle: "Best Sellers",
     featuredText: "See the top picks first, then order below.",
     fullMenuTitle: "Full Menu",
-    fullMenuText: "Browse our waffle, mochi waffle, and drinks menu before placing your order below.",
-    scheduleTitle: "Today’s Location & Pickup Time",
-    date: "Today",
+    fullMenuText:
+      "Browse our waffle, mochi waffle, and drinks menu before placing your order below.",
+    scheduleTitle: "Choose Date & Pickup Time",
+    date: "Date",
     time: "Preferred Pickup Time",
     day: "Day",
     location: "Pickup Location",
     closed: "Closed / Unavailable",
-    closedNote: "Tuesday is unavailable. Please choose another date.",
+    closedNote: "Wednesday is closed. Please choose another date.",
     businessHours: "Business Hours",
     businessHoursValue: "6:45 PM - 10:30 PM",
     categoryTitle: "Choose Category",
@@ -104,6 +115,7 @@ const translations = {
     qty: "Quantity",
     subtotal: "Subtotal",
     addToOrder: "Add to Order",
+    added: "✓ Added!",
     noTopping: "No extra sauce",
     mochiStep1: "Step 1: Choose Mochi Style",
     mochiStep2: "Step 2: Choose Price Tier",
@@ -121,6 +133,7 @@ const translations = {
     orderGuide2: "Pick category, flavour, quantity, and extra",
     orderGuide3: "Then send via WhatsApp",
     remove: "Remove",
+    confirmRemove: "Remove this item from your order?",
     total: "Total",
     chooseFirst: "Please complete the required selections first",
     instagram: "Instagram",
@@ -132,24 +145,26 @@ const translations = {
     lessSweet: "Less sweet",
     flavourLine: "Flavour",
     footerTag: "Fresh bites worth craving",
-    footerNote: "Self pickup only · Stall location changes by date · Tuesday closed",
+    footerNote:
+      "Self pickup only · Stall location changes by date · Wednesday closed",
     footerHours: "Business Hours 6:45 PM – 10:30 PM",
     footerCta: "WhatsApp Order",
     paymentMethod: "Payment Method",
     cashPayment: "Cash Payment",
     qrPayment: "QR Payment",
-    qrNote: "If you choose QR payment, we will send you the payment QR manually via WhatsApp.",
+    qrNote:
+      "If you choose QR payment, we will send you the payment QR manually via WhatsApp.",
+    noSlotsToday: "Today's pickup slots are no longer available. Please choose another date.",
+    itemsInCart: "items",
   },
 };
 
-const instagramUrl = "https://instagram.com/jojo.bakess";
-const whatsappUrl = `https://wa.me/${WHATSAPP_NUMBER}`;
-
+// ─── Schedule & Time Data ─────────────────────────────────────────────────────
 const pickupSchedule = {
   0: { zh: "Bukit Siput", en: "Bukit Siput" },
   1: { zh: "Jementah", en: "Jementah" },
   2: { zh: "Yayasan", en: "Yayasan" },
-  3: null,
+  3: null, // Wednesday closed
   4: { zh: "Kampung Tengah", en: "Kampung Tengah" },
   5: { zh: "Yayasan", en: "Yayasan" },
   6: { zh: "Kampung Tengah", en: "Kampung Tengah" },
@@ -160,14 +175,18 @@ const weekdayNames = {
   en: ["Sunday", "Monday", "Tuesday", "Wednesday", "Thursday", "Friday", "Saturday"],
 };
 
-const pickupTimes = [];
-for (let totalMinutes = 18 * 60 + 45; totalMinutes <= 22 * 60 + 30; totalMinutes += 5) {
-  const hour24 = Math.floor(totalMinutes / 60);
-  const minute = totalMinutes % 60;
-  const suffix = hour24 >= 12 ? "PM" : "AM";
-  const hour12 = hour24 > 12 ? hour24 - 12 : hour24;
-  pickupTimes.push(`${hour12}:${String(minute).padStart(2, "0")} ${suffix}`);
-}
+// Pre-generate all possible pickup times once
+const ALL_PICKUP_TIMES = (() => {
+  const times = [];
+  for (let totalMins = 18 * 60 + 45; totalMins <= 22 * 60 + 30; totalMins += 5) {
+    const h24 = Math.floor(totalMins / 60);
+    const m = totalMins % 60;
+    const suffix = h24 >= 12 ? "PM" : "AM";
+    const h12 = h24 > 12 ? h24 - 12 : h24;
+    times.push(`${h12}:${String(m).padStart(2, "0")} ${suffix}`);
+  }
+  return times;
+})();
 
 const sugarLevels = [
   { zh: "正常", en: "Normal" },
@@ -179,6 +198,7 @@ const toppingOptions = [
   { id: "extra_sauce", zh: "加多酱", en: "Extra sauce", price: 1 },
 ];
 
+// ─── Menu Data ────────────────────────────────────────────────────────────────
 const categories = [
   { id: "classic", zh: "经典华夫饼", en: "Classic Waffle" },
   { id: "special", zh: "特别口味", en: "Special Flavours" },
@@ -195,7 +215,6 @@ const classicItems = [
   { id: "honey", zh: "蜜糖", en: "Honey" },
   { id: "kaya", zh: "Kaya", en: "Kaya" },
 ];
-const CLASSIC_PRICE = 5;
 
 const specialItems = [
   { id: "pistachio", zh: "Pistachio 开心果", en: "Pistachio", price: 11 },
@@ -214,6 +233,10 @@ const specialItems = [
   { id: "taro_floss", zh: "芋泥 + 鸡肉松", en: "Taro + Chicken Floss", price: 10 },
   { id: "double_lotus", zh: "Double Lotus Biscoff", en: "Double Lotus Biscoff", price: 10 },
   { id: "apam_balik", zh: "Apam Balik", en: "Apam Balik", price: 8 },
+  { id: "pistachio_choco_kunafa", zh: "开心果+巧克力Kunafa", en: "Pistachio + Chocolate Kunafa", price: 13 },
+  { id: "choco_crispy", zh: "巧克力脆脆珠", en: "Chocolate Crispy Pearls", price: 7 },
+  { id: "choco_pistachio_kunafa", zh: "巧克力+开心果Kunafa", en: "Chocolate + Pistachio Kunafa", price: 10 },
+  { id: "matcha_choco_kunafa", zh: "抹茶+巧克力Kunafa", en: "Matcha + Chocolate Kunafa", price: 11 },
 ];
 
 const nutellaItems = [
@@ -243,9 +266,18 @@ const drinksItems = [
 ];
 
 const mochiTiers = {
-  classic: { id: "classic", labelZh: "经典 RM8", labelEn: "Classic RM8", price: 8, options: classicItems },
+  classic: {
+    id: "classic",
+    labelZh: "经典 RM8",
+    labelEn: "Classic RM8",
+    price: 8,
+    options: classicItems,
+  },
   special: {
-    id: "special", labelZh: "特别 RM10", labelEn: "Special RM10", price: 10,
+    id: "special",
+    labelZh: "特别 RM10",
+    labelEn: "Special RM10",
+    price: 10,
     options: [
       { id: "m_matcha", zh: "抹茶", en: "Matcha" },
       { id: "m_nutella", zh: "Nutella", en: "Nutella" },
@@ -255,7 +287,10 @@ const mochiTiers = {
     ],
   },
   premium: {
-    id: "premium", labelZh: "Premium RM12", labelEn: "Premium RM12", price: 12,
+    id: "premium",
+    labelZh: "Premium RM12",
+    labelEn: "Premium RM12",
+    price: 12,
     options: [
       { id: "m_taro_floss", zh: "芋泥肉松麻薯", en: "Taro Chicken Floss Mochi" },
       { id: "m_nutella_matcha", zh: "Nutella Matcha", en: "Nutella Matcha" },
@@ -277,41 +312,62 @@ const menuGallery = [
   { image: "/menu/drinks-menu.jpeg", zh: "Drinks Menu", en: "Drinks Menu" },
 ];
 
-function formatPrice(value) { return `RM${value}`; }
-function getText(lang, item) { return lang === "zh" ? item.zh : item.en; }
-function getTodayString() {
-  const now = new Date();
-  return `${now.getFullYear()}-${String(now.getMonth() + 1).padStart(2, "0")}-${String(now.getDate()).padStart(2, "0")}`;
+// ─── Helpers ──────────────────────────────────────────────────────────────────
+function formatPrice(value) {
+  return `RM${value}`;
 }
+
+function getText(lang, item) {
+  return lang === "zh" ? item.zh : item.en;
+}
+
+/** Returns YYYY-MM-DD string for a Date object, in local time */
+function toDateString(date) {
+  return `${date.getFullYear()}-${String(date.getMonth() + 1).padStart(2, "0")}-${String(date.getDate()).padStart(2, "0")}`;
+}
+
+/** Build selectable date options: today + next ADVANCE_DAYS days, skip closed days */
+function buildDateOptions(lang) {
+  const options = [];
+  const now = new Date();
+  for (let i = 0; i < ADVANCE_DAYS; i++) {
+    const d = new Date(now);
+    d.setDate(now.getDate() + i);
+    const dateStr = toDateString(d);
+    const dayIndex = d.getDay();
+    const closed = pickupSchedule[dayIndex] === null;
+    const dayLabel = weekdayNames[lang][dayIndex];
+    const label = `${dateStr} (${dayLabel})${closed ? (lang === "zh" ? " — 休息" : " — Closed") : ""}`;
+    options.push({ value: dateStr, label, closed, dayIndex });
+  }
+  return options;
+}
+
 function roundUpToNextFiveMinutes(totalMinutes) {
   return Math.ceil(totalMinutes / 5) * 5;
 }
 
-function getAvailablePickupTimes(dateStr, allTimes) {
-  if (!dateStr) return allTimes;
+function getAvailablePickupTimes(dateStr) {
+  if (!dateStr) return ALL_PICKUP_TIMES;
 
   const now = new Date();
   const selectedDate = new Date(`${dateStr}T00:00:00`);
-
   const isToday =
     selectedDate.getFullYear() === now.getFullYear() &&
     selectedDate.getMonth() === now.getMonth() &&
     selectedDate.getDate() === now.getDate();
 
-  if (!isToday) return allTimes;
+  if (!isToday) return ALL_PICKUP_TIMES;
 
   const currentMinutes = now.getHours() * 60 + now.getMinutes();
   const earliestMinutes = roundUpToNextFiveMinutes(currentMinutes + 10);
 
-  return allTimes.filter((time) => {
+  return ALL_PICKUP_TIMES.filter((time) => {
     const [timePart, suffix] = time.split(" ");
     let [hour, minute] = timePart.split(":").map(Number);
-
     if (suffix === "PM" && hour !== 12) hour += 12;
     if (suffix === "AM" && hour === 12) hour = 0;
-
-    const total = hour * 60 + minute;
-    return total >= earliestMinutes;
+    return hour * 60 + minute >= earliestMinutes;
   });
 }
 
@@ -325,6 +381,7 @@ function getPickupDetails(dateStr, lang) {
   const locationLabel = closed ? translations[lang].closed : getText(lang, location);
   return { dayIndex, dayLabel, locationLabel, closed };
 }
+
 function buildOrderMessage({ lang, items, pickupDate, pickupTime, pickupDay, pickupLocation, paymentMethod }) {
   const t = translations[lang];
   const lines = [];
@@ -346,6 +403,7 @@ function buildOrderMessage({ lang, items, pickupDate, pickupTime, pickupDay, pic
   });
   const total = items.reduce((sum, item) => sum + item.subtotal, 0);
   lines.push("");
+  // FIX: paymentMethod is now correctly included
   lines.push(`${t.paymentMethod}: ${paymentMethod === "qr" ? t.qrPayment : t.cashPayment}`);
   lines.push(`${t.total}: ${formatPrice(total)}`);
   lines.push("");
@@ -353,10 +411,62 @@ function buildOrderMessage({ lang, items, pickupDate, pickupTime, pickupDay, pic
   return lines.join("\n");
 }
 
+// ─── Sub-components ───────────────────────────────────────────────────────────
+
+/** Quantity stepper: shared between waffle and mochi builders */
+function QuantityStepper({ value, onChange }) {
+  return (
+    <div className="stepper">
+      <button type="button" onClick={() => onChange(Math.max(1, value - 1))}>−</button>
+      <strong>{value}</strong>
+      <button type="button" onClick={() => onChange(value + 1)}>+</button>
+    </div>
+  );
+}
+
+/** Builder footer row (qty + subtotal + CTA) */
+function BuilderFooter({ t, qty, onQtyChange, subtotal, onAdd, addedFlash }) {
+  return (
+    <div className="builder-footer">
+      <div className="qty-box">
+        <span>{t.qty}</span>
+        <QuantityStepper value={qty} onChange={onQtyChange} />
+      </div>
+      <div className="subtotal-box">
+        <span>{t.subtotal}</span>
+        <strong>{formatPrice(subtotal)}</strong>
+      </div>
+      <button className={`primary-button ${addedFlash ? "flash" : ""}`} onClick={onAdd}>
+        {addedFlash ? t.added : t.addToOrder}
+      </button>
+    </div>
+  );
+}
+
+// ─── Main App ─────────────────────────────────────────────────────────────────
 export default function App() {
   const [lang, setLang] = useState("zh");
-  const pickupDate = getTodayString();
-  const [pickupTime, setPickupTime] = useState(pickupTimes[0]);
+  const t = translations[lang];
+
+  // ── Date & Time ──
+  const todayStr = toDateString(new Date());
+  const [pickupDate, setPickupDate] = useState(todayStr);
+  const [pickupTime, setPickupTime] = useState("");
+
+  const dateOptions = useMemo(() => buildDateOptions(lang), [lang]);
+  const availablePickupTimes = useMemo(() => getAvailablePickupTimes(pickupDate), [pickupDate]);
+  const noAvailableTime = availablePickupTimes.length === 0;
+  const pickupDetails = useMemo(() => getPickupDetails(pickupDate, lang), [pickupDate, lang]);
+
+  // Derive effective pickup time without setState-in-effect
+  const effectivePickupTime = useMemo(() => {
+    if (availablePickupTimes.length === 0) return "";
+    return availablePickupTimes.includes(pickupTime)
+      ? pickupTime
+      : availablePickupTimes[0];
+  }, [availablePickupTimes, pickupTime]);
+
+  // ── Category & Order Builder ──
   const [category, setCategory] = useState("classic");
   const [classicFlavour1, setClassicFlavour1] = useState(classicItems[0].id);
   const [classicFlavour2, setClassicFlavour2] = useState("");
@@ -366,30 +476,29 @@ export default function App() {
   const [selectedTopping, setSelectedTopping] = useState("none");
   const [quantity, setQuantity] = useState(1);
   const [drinkSugar, setDrinkSugar] = useState(sugarLevels[0].en);
+
+  // ── Mochi ──
   const [mochiStyle, setMochiStyle] = useState("inside");
   const [mochiTier, setMochiTier] = useState("classic");
   const [selectedMochiOption1, setSelectedMochiOption1] = useState(mochiTiers.classic.options[0].id);
   const [selectedMochiOption2, setSelectedMochiOption2] = useState("");
   const [mochiQuantity, setMochiQuantity] = useState(1);
+
+  // ── Order ──
   const [orderItems, setOrderItems] = useState([]);
   const [paymentMethod, setPaymentMethod] = useState("cash");
 
-  const t = translations[lang];
-  const pickupDetails = useMemo(() => getPickupDetails(pickupDate, lang), [pickupDate, lang]);
-  const availablePickupTimes = useMemo(() => {
-    return getAvailablePickupTimes(pickupDate, pickupTimes);
-  }, [pickupDate]);
-  const noAvailableTime = availablePickupTimes.length === 0;
-  const todayOnlyInvalid = false;
-  const effectivePickupTime = availablePickupTimes.includes(pickupTime)
-    ? pickupTime
-    : availablePickupTimes[0] || "";
-  const selectedToppingObj = toppingOptions.find((item) => item.id === selectedTopping) || toppingOptions[0];
+  // ── UX feedback ──
+  const [addedFlash, setAddedFlash] = useState(false); // "Added!" button flash
+  const [mochiAddedFlash, setMochiAddedFlash] = useState(false);
+
+  // ── Derived ──
+  const selectedToppingObj = toppingOptions.find((o) => o.id === selectedTopping) || toppingOptions[0];
 
   const activeItem = useMemo(() => {
-    if (category === "special") return specialItems.find((item) => item.id === selectedSpecial);
-    if (category === "nutella") return nutellaItems.find((item) => item.id === selectedNutella);
-    if (category === "drinks") return drinksItems.find((item) => item.id === selectedDrink);
+    if (category === "special") return specialItems.find((i) => i.id === selectedSpecial);
+    if (category === "nutella") return nutellaItems.find((i) => i.id === selectedNutella);
+    if (category === "drinks") return drinksItems.find((i) => i.id === selectedDrink);
     return null;
   }, [category, selectedSpecial, selectedNutella, selectedDrink]);
 
@@ -402,89 +511,157 @@ export default function App() {
 
   const currentMochiTier = mochiTiers[mochiTier];
   const currentMochiSubtotal = currentMochiTier.price * mochiQuantity;
+  const orderTotal = orderItems.reduce((sum, item) => sum + item.subtotal, 0);
 
-  function handleCategoryChange(nextCategory) {
-    setCategory(nextCategory);
+  // ── Handlers ──
+  const handleCategoryChange = useCallback((next) => {
+    setCategory(next);
     setQuantity(1);
     setSelectedTopping("none");
-  }
-  function handleMochiTierChange(nextTier) {
-    setMochiTier(nextTier);
-    setSelectedMochiOption1(mochiTiers[nextTier].options[0].id);
+  }, []);
+
+  const handleMochiTierChange = useCallback((next) => {
+    setMochiTier(next);
+    setSelectedMochiOption1(mochiTiers[next].options[0].id);
     setSelectedMochiOption2("");
-  }
-  function ensureDifferentFlavours(first, second) {
-    return second === "" || first !== second;
+  }, []);
+
+  function flashAdded(setFlash) {
+    setFlash(true);
+    setTimeout(() => setFlash(false), 1500);
   }
 
   function addCurrentItem() {
     if (category === "classic") {
-      if (!ensureDifferentFlavours(classicFlavour1, classicFlavour2)) {
+      if (classicFlavour2 !== "" && classicFlavour1 === classicFlavour2) {
         alert(t.sameFlavourError);
         return;
       }
-      const flavour1 = classicItems.find((item) => item.id === classicFlavour1);
-      const flavour2 = classicItems.find((item) => item.id === classicFlavour2);
-      setOrderItems((prev) => [...prev, {
-        id: `classic-${classicFlavour1}-${classicFlavour2}-${Date.now()}`,
-        title: `${getText(lang, categories.find((c) => c.id === "classic"))}`,
-        extraLine: `${t.flavourLine}: ${getText(lang, flavour1)}${flavour2 ? ` + ${getText(lang, flavour2)}` : ""}`,
-        toppingLine: selectedToppingObj.price > 0 ? `${t.toppings}: ${getText(lang, selectedToppingObj)} (+${formatPrice(selectedToppingObj.price)})` : null,
-        sugarLine: null, quantity, subtotal: currentSubtotal,
-      }]);
-      setQuantity(1); setSelectedTopping("none"); return;
+      const f1 = classicItems.find((i) => i.id === classicFlavour1);
+      const f2 = classicItems.find((i) => i.id === classicFlavour2);
+      setOrderItems((prev) => [
+        ...prev,
+        {
+          id: `classic-${classicFlavour1}-${classicFlavour2}-${Date.now()}`,
+          title: getText(lang, categories.find((c) => c.id === "classic")),
+          extraLine: `${t.flavourLine}: ${getText(lang, f1)}${f2 ? ` + ${getText(lang, f2)}` : ""}`,
+          toppingLine:
+            selectedToppingObj.price > 0
+              ? `${t.toppings}: ${getText(lang, selectedToppingObj)} (+${formatPrice(selectedToppingObj.price)})`
+              : null,
+          sugarLine: null,
+          quantity,
+          subtotal: currentSubtotal,
+        },
+      ]);
+      setQuantity(1);
+      setSelectedTopping("none");
+      flashAdded(setAddedFlash);
+      return;
     }
-    if (!activeItem) { alert(t.chooseFirst); return; }
-    setOrderItems((prev) => [...prev, {
-      id: `${category}-${activeItem.id}-${Date.now()}`,
-      title: `${getText(lang, categories.find((c) => c.id === category))} - ${getText(lang, activeItem)}`,
-      extraLine: null,
-      toppingLine: category !== "drinks" && selectedToppingObj.price > 0 ? `${t.toppings}: ${getText(lang, selectedToppingObj)} (+${formatPrice(selectedToppingObj.price)})` : null,
-      sugarLine: category === "drinks" ? `${t.sugarLevel}: ${lang === "zh" ? (drinkSugar === "Normal" ? t.normalSweet : t.lessSweet) : drinkSugar}` : null,
-      quantity, subtotal: currentSubtotal,
-    }]);
-    setQuantity(1); setSelectedTopping("none");
+
+    if (!activeItem) {
+      alert(t.chooseFirst);
+      return;
+    }
+
+    setOrderItems((prev) => [
+      ...prev,
+      {
+        id: `${category}-${activeItem.id}-${Date.now()}`,
+        title: `${getText(lang, categories.find((c) => c.id === category))} - ${getText(lang, activeItem)}`,
+        extraLine: null,
+        toppingLine:
+          category !== "drinks" && selectedToppingObj.price > 0
+            ? `${t.toppings}: ${getText(lang, selectedToppingObj)} (+${formatPrice(selectedToppingObj.price)})`
+            : null,
+        sugarLine:
+          category === "drinks"
+            ? `${t.sugarLevel}: ${lang === "zh" ? (drinkSugar === "Normal" ? t.normalSweet : t.lessSweet) : drinkSugar}`
+            : null,
+        quantity,
+        subtotal: currentSubtotal,
+      },
+    ]);
+    setQuantity(1);
+    setSelectedTopping("none");
+    flashAdded(setAddedFlash);
   }
 
   function addMochiItem() {
-    if (mochiTier === "classic" && !ensureDifferentFlavours(selectedMochiOption1, selectedMochiOption2)) {
-      alert(t.sameFlavourError); return;
+    if (mochiTier === "classic" && selectedMochiOption2 !== "" && selectedMochiOption1 === selectedMochiOption2) {
+      alert(t.sameFlavourError);
+      return;
     }
-    const option1 = currentMochiTier.options.find((item) => item.id === selectedMochiOption1);
-    const option2 = currentMochiTier.options.find((item) => item.id === selectedMochiOption2);
-    setOrderItems((prev) => [...prev, {
-      id: `mochi-${selectedMochiOption1}-${selectedMochiOption2}-${Date.now()}`,
-      title: `${getText(lang, categories.find((c) => c.id === "mochi"))}`,
-      extraLine: `${lang === "zh" ? "麻薯方式" : "Mochi Style"}: ${mochiStyle === "inside" ? t.mochiStyleInside : t.mochiStyleOutside} · ${lang === "zh" ? currentMochiTier.labelZh : currentMochiTier.labelEn} · ${t.flavourLine}: ${getText(lang, option1)}${option2 ? ` + ${getText(lang, option2)}` : ""}`,
-      toppingLine: null, sugarLine: null, quantity: mochiQuantity, subtotal: currentMochiSubtotal,
-    }]);
+    const opt1 = currentMochiTier.options.find((i) => i.id === selectedMochiOption1);
+    const opt2 = currentMochiTier.options.find((i) => i.id === selectedMochiOption2);
+    setOrderItems((prev) => [
+      ...prev,
+      {
+        id: `mochi-${selectedMochiOption1}-${selectedMochiOption2}-${Date.now()}`,
+        title: getText(lang, categories.find((c) => c.id === "mochi")),
+        extraLine: `${lang === "zh" ? "麻薯方式" : "Mochi Style"}: ${
+          mochiStyle === "inside" ? t.mochiStyleInside : t.mochiStyleOutside
+        } · ${lang === "zh" ? currentMochiTier.labelZh : currentMochiTier.labelEn} · ${
+          t.flavourLine
+        }: ${getText(lang, opt1)}${opt2 ? ` + ${getText(lang, opt2)}` : ""}`,
+        toppingLine: null,
+        sugarLine: null,
+        quantity: mochiQuantity,
+        subtotal: currentMochiSubtotal,
+      },
+    ]);
     setMochiQuantity(1);
+    flashAdded(setMochiAddedFlash);
   }
 
-  function removeOrderItem(id) {
-    setOrderItems((prev) => prev.filter((item) => item.id !== id));
+  // FIX: confirm before removing
+  function removeOrderItem(id, title) {
+    const msg = `${t.confirmRemove}\n"${title}"`;
+    if (window.confirm(msg)) {
+      setOrderItems((prev) => prev.filter((item) => item.id !== id));
+    }
   }
 
   function handleWhatsAppCheckout() {
-    if (pickupDetails.closed || orderItems.length === 0) {
+    if (pickupDetails.closed || orderItems.length === 0 || noAvailableTime) {
       alert(lang === "zh" ? "请先完成日期和商品。" : "Please complete date and items first.");
       return;
     }
-    const message = buildOrderMessage({ lang, items: orderItems, pickupDate, pickupTime, pickupDay: pickupDetails.dayLabel, pickupLocation: pickupDetails.locationLabel });
+    // FIX: paymentMethod now correctly passed
+    const message = buildOrderMessage({
+      lang,
+      items: orderItems,
+      pickupDate,
+      pickupTime: effectivePickupTime,
+      pickupDay: pickupDetails.dayLabel,
+      pickupLocation: pickupDetails.locationLabel,
+      paymentMethod, // ← was missing before
+    });
     window.open(`https://wa.me/${WHATSAPP_NUMBER}?text=${encodeURIComponent(message)}`, "_blank");
   }
 
-  const orderTotal = orderItems.reduce((sum, item) => sum + item.subtotal, 0);
-
+  // ── Render ──
   return (
     <div className="page-shell">
       <div className="bg-orb orb-one" />
       <div className="bg-orb orb-two" />
 
+      {/* ── Header ── */}
       <header className="hero-card">
         <div className="hero-topbar">
           <img src="/logo.png" alt="JojoBakes Logo" className="brand-logo" />
-          <button className="lang-button" onClick={() => setLang((prev) => (prev === "zh" ? "en" : "zh"))}>{t.lang}</button>
+          <div style={{ display: "flex", alignItems: "center", gap: "0.75rem" }}>
+            {/* Cart badge shortcut */}
+            {orderItems.length > 0 && (
+              <a href="#order-section" className="cart-badge">
+                🛒 {orderItems.length} {t.itemsInCart}
+              </a>
+            )}
+            <button className="lang-button" onClick={() => setLang((prev) => (prev === "zh" ? "en" : "zh"))}>
+              {t.lang}
+            </button>
+          </div>
         </div>
 
         <div className="hero-copy">
@@ -501,6 +678,7 @@ export default function App() {
         </div>
       </header>
 
+      {/* ── Featured + Guide ── */}
       <section className="feature-grid">
         <div className="feature-card">
           <h3>{t.featuredTitle}</h3>
@@ -523,7 +701,9 @@ export default function App() {
             <li>{t.orderGuide3}</li>
           </ul>
           <div className="social-block">
-            <a href={instagramUrl} target="_blank" rel="noreferrer" className="instagram-link">{t.instagram}: @jojo.bakess</a>
+            <a href={instagramUrl} target="_blank" rel="noreferrer" className="instagram-link">
+              {t.instagram}: @jojo.bakess
+            </a>
           </div>
           <div className="pickup-note">
             <h4>{t.pickupNoteTitle}</h4>
@@ -532,6 +712,7 @@ export default function App() {
         </div>
       </section>
 
+      {/* ── Menu Gallery ── */}
       <section className="section-card" id="menu-gallery">
         <div className="section-head"><h2>{t.fullMenuTitle}</h2></div>
         <p className="section-intro">{t.fullMenuText}</p>
@@ -545,13 +726,22 @@ export default function App() {
         </div>
       </section>
 
+      {/* ── Schedule Section ── */}
       <section className="section-card">
         <div className="section-head"><h2>{t.scheduleTitle}</h2></div>
         <div className="schedule-grid">
-          <div className="info-box">
-            <small>{t.date}</small>
-            <strong>{pickupDate}</strong>
-          </div>
+          {/* FIX: date is now a real select, not hardcoded today */}
+          <label className="field">
+            <span>{t.date}</span>
+            <select value={pickupDate} onChange={(e) => setPickupDate(e.target.value)}>
+              {dateOptions.map((opt) => (
+                <option key={opt.value} value={opt.value} disabled={opt.closed}>
+                  {opt.label}
+                </option>
+              ))}
+            </select>
+          </label>
+
           <label className="field">
             <span>{t.time}</span>
             <select
@@ -559,93 +749,105 @@ export default function App() {
               onChange={(e) => setPickupTime(e.target.value)}
               disabled={noAvailableTime || pickupDetails.closed}
             >
-              {availablePickupTimes.map((time) => <option value={time} key={time}>{time}</option>)}
+              {availablePickupTimes.map((time) => (
+                <option value={time} key={time}>{time}</option>
+              ))}
             </select>
           </label>
+
           <div className="info-box">
             <small>{t.day}</small>
             <strong>{pickupDetails.dayLabel}</strong>
           </div>
+
           <div className={`info-box ${pickupDetails.closed ? "is-closed" : ""}`}>
             <small>{t.location}</small>
             <strong>{pickupDetails.locationLabel}</strong>
           </div>
         </div>
+
         <div className="hours-row">
           <div className="hours-chip">
             <span>{t.businessHours}</span>
             <strong>{t.businessHoursValue}</strong>
           </div>
         </div>
+
         {pickupDetails.closed && <p className="closed-note">{t.closedNote}</p>}
-        {noAvailableTime && !pickupDetails.closed && !todayOnlyInvalid && (
-          <p className="closed-note">
-            {lang === "zh"
-              ? "今天可预约时间已结束，请选择其他日期。"
-              : "Today's pickup slots are no longer available. Please choose another date."}
-          </p>
+        {noAvailableTime && !pickupDetails.closed && (
+          <p className="closed-note">{t.noSlotsToday}</p>
         )}
       </section>
 
+      {/* ── Order Builder ── */}
       <section className="section-card" id="order-section">
         <div className="section-head"><h2>{t.categoryTitle}</h2></div>
         <div className="category-grid">
           {categories.map((item) => (
-            <button key={item.id} className={`category-button ${category === item.id ? "active" : ""}`} onClick={() => handleCategoryChange(item.id)}>
+            <button
+              key={item.id}
+              className={`category-button ${category === item.id ? "active" : ""}`}
+              onClick={() => handleCategoryChange(item.id)}
+            >
               {getText(lang, item)}
             </button>
           ))}
         </div>
 
+        {/* Classic */}
         {category === "classic" && (
           <div className="builder-card">
             <div className="builder-row two-select-row">
               <label className="field">
                 <span>{t.classicFlavour1}</span>
                 <select value={classicFlavour1} onChange={(e) => setClassicFlavour1(e.target.value)}>
-                  {classicItems.map((item) => <option value={item.id} key={item.id}>{getText(lang, item)}</option>)}
+                  {classicItems.map((item) => (
+                    <option value={item.id} key={item.id}>{getText(lang, item)}</option>
+                  ))}
                 </select>
               </label>
               <label className="field">
                 <span>{t.classicFlavour2}</span>
                 <select value={classicFlavour2} onChange={(e) => setClassicFlavour2(e.target.value)}>
                   <option value="">{t.noSecondFlavour}</option>
-                  {classicItems.filter((item) => item.id !== classicFlavour1).map((item) => (
-                    <option value={item.id} key={item.id}>{getText(lang, item)}</option>
-                  ))}
+                  {classicItems
+                    .filter((item) => item.id !== classicFlavour1)
+                    .map((item) => (
+                      <option value={item.id} key={item.id}>{getText(lang, item)}</option>
+                    ))}
                 </select>
               </label>
               <label className="field">
                 <span>{t.toppings}</span>
                 <select value={selectedTopping} onChange={(e) => setSelectedTopping(e.target.value)}>
-                  {toppingOptions.map((item) => <option value={item.id} key={item.id}>{getText(lang, item)}{item.price > 0 ? ` (+${formatPrice(item.price)})` : ""}</option>)}
+                  {toppingOptions.map((item) => (
+                    <option value={item.id} key={item.id}>
+                      {getText(lang, item)}{item.price > 0 ? ` (+${formatPrice(item.price)})` : ""}
+                    </option>
+                  ))}
                 </select>
               </label>
             </div>
             <p className="option-hint">{t.chooseOneOrTwo}</p>
-            <div className="builder-footer">
-              <div className="qty-box">
-                <span>{t.qty}</span>
-                <div className="stepper">
-                  <button onClick={() => setQuantity((prev) => Math.max(1, prev - 1))}>−</button>
-                  <strong>{quantity}</strong>
-                  <button onClick={() => setQuantity((prev) => prev + 1)}>+</button>
-                </div>
-              </div>
-              <div className="subtotal-box">
-                <span>{t.subtotal}</span>
-                <strong>{formatPrice(currentSubtotal)}</strong>
-              </div>
-              <button className="primary-button" onClick={addCurrentItem}>{t.addToOrder}</button>
-            </div>
+            <BuilderFooter
+              t={t}
+              qty={quantity}
+              onQtyChange={setQuantity}
+              subtotal={currentSubtotal}
+              onAdd={addCurrentItem}
+              addedFlash={addedFlash}
+            />
           </div>
         )}
 
+        {/* Special / Nutella / Drinks */}
         {category !== "classic" && category !== "mochi" && (
           <div className="builder-card">
             <div className="builder-row">
               <label className="field field-grow">
-                <span>{category === "special" ? t.specialItem : category === "nutella" ? t.nutellaItem : t.drinksItem}</span>
+                <span>
+                  {category === "special" ? t.specialItem : category === "nutella" ? t.nutellaItem : t.drinksItem}
+                </span>
                 <select
                   value={category === "special" ? selectedSpecial : category === "nutella" ? selectedNutella : selectedDrink}
                   onChange={(e) => {
@@ -656,7 +858,9 @@ export default function App() {
                   }}
                 >
                   {(category === "special" ? specialItems : category === "nutella" ? nutellaItems : drinksItems).map((item) => (
-                    <option key={item.id} value={item.id}>{getText(lang, item)} · {formatPrice(item.price)}</option>
+                    <option key={item.id} value={item.id}>
+                      {getText(lang, item)} · {formatPrice(item.price)}
+                    </option>
                   ))}
                 </select>
               </label>
@@ -665,37 +869,36 @@ export default function App() {
                 <label className="field">
                   <span>{t.sugarLevel}</span>
                   <select value={drinkSugar} onChange={(e) => setDrinkSugar(e.target.value)}>
-                    {sugarLevels.map((level) => <option value={level.en} key={level.en}>{lang === "zh" ? level.zh : level.en}</option>)}
+                    {sugarLevels.map((level) => (
+                      <option value={level.en} key={level.en}>{lang === "zh" ? level.zh : level.en}</option>
+                    ))}
                   </select>
                 </label>
               ) : (
                 <label className="field">
                   <span>{t.toppings}</span>
                   <select value={selectedTopping} onChange={(e) => setSelectedTopping(e.target.value)}>
-                    {toppingOptions.map((item) => <option value={item.id} key={item.id}>{getText(lang, item)}{item.price > 0 ? ` (+${formatPrice(item.price)})` : ""}</option>)}
+                    {toppingOptions.map((item) => (
+                      <option value={item.id} key={item.id}>
+                        {getText(lang, item)}{item.price > 0 ? ` (+${formatPrice(item.price)})` : ""}
+                      </option>
+                    ))}
                   </select>
                 </label>
               )}
             </div>
-
-            <div className="builder-footer">
-              <div className="qty-box">
-                <span>{t.qty}</span>
-                <div className="stepper">
-                  <button onClick={() => setQuantity((prev) => Math.max(1, prev - 1))}>−</button>
-                  <strong>{quantity}</strong>
-                  <button onClick={() => setQuantity((prev) => prev + 1)}>+</button>
-                </div>
-              </div>
-              <div className="subtotal-box">
-                <span>{t.subtotal}</span>
-                <strong>{formatPrice(currentSubtotal)}</strong>
-              </div>
-              <button className="primary-button" onClick={addCurrentItem}>{t.addToOrder}</button>
-            </div>
+            <BuilderFooter
+              t={t}
+              qty={quantity}
+              onQtyChange={setQuantity}
+              subtotal={currentSubtotal}
+              onAdd={addCurrentItem}
+              addedFlash={addedFlash}
+            />
           </div>
         )}
 
+        {/* Mochi */}
         {category === "mochi" && (
           <div className="builder-card mochi-card">
             <div className="mochi-step">
@@ -709,9 +912,15 @@ export default function App() {
             <div className="mochi-step">
               <h3>{t.mochiStep2}</h3>
               <div className="choice-grid three-cols">
-                <button className={`choice-button ${mochiTier === "classic" ? "active" : ""}`} onClick={() => handleMochiTierChange("classic")}>{lang === "zh" ? mochiTiers.classic.labelZh : mochiTiers.classic.labelEn}</button>
-                <button className={`choice-button ${mochiTier === "special" ? "active" : ""}`} onClick={() => handleMochiTierChange("special")}>{lang === "zh" ? mochiTiers.special.labelZh : mochiTiers.special.labelEn}</button>
-                <button className={`choice-button ${mochiTier === "premium" ? "active" : ""}`} onClick={() => handleMochiTierChange("premium")}>{lang === "zh" ? mochiTiers.premium.labelZh : mochiTiers.premium.labelEn}</button>
+                {Object.values(mochiTiers).map((tier) => (
+                  <button
+                    key={tier.id}
+                    className={`choice-button ${mochiTier === tier.id ? "active" : ""}`}
+                    onClick={() => handleMochiTierChange(tier.id)}
+                  >
+                    {lang === "zh" ? tier.labelZh : tier.labelEn}
+                  </button>
+                ))}
               </div>
             </div>
 
@@ -723,16 +932,20 @@ export default function App() {
                     <label className="field">
                       <span>{t.classicFlavour1}</span>
                       <select value={selectedMochiOption1} onChange={(e) => setSelectedMochiOption1(e.target.value)}>
-                        {currentMochiTier.options.map((item) => <option value={item.id} key={item.id}>{getText(lang, item)}</option>)}
+                        {currentMochiTier.options.map((item) => (
+                          <option value={item.id} key={item.id}>{getText(lang, item)}</option>
+                        ))}
                       </select>
                     </label>
                     <label className="field">
                       <span>{t.classicFlavour2}</span>
                       <select value={selectedMochiOption2} onChange={(e) => setSelectedMochiOption2(e.target.value)}>
                         <option value="">{t.noSecondFlavour}</option>
-                        {currentMochiTier.options.filter((item) => item.id !== selectedMochiOption1).map((item) => (
-                          <option value={item.id} key={item.id}>{getText(lang, item)}</option>
-                        ))}
+                        {currentMochiTier.options
+                          .filter((item) => item.id !== selectedMochiOption1)
+                          .map((item) => (
+                            <option value={item.id} key={item.id}>{getText(lang, item)}</option>
+                          ))}
                       </select>
                     </label>
                   </div>
@@ -742,35 +955,34 @@ export default function App() {
                 <label className="field">
                   <span>{t.classicFlavour1}</span>
                   <select value={selectedMochiOption1} onChange={(e) => setSelectedMochiOption1(e.target.value)}>
-                    {currentMochiTier.options.map((item) => <option value={item.id} key={item.id}>{getText(lang, item)}</option>)}
+                    {currentMochiTier.options.map((item) => (
+                      <option value={item.id} key={item.id}>{getText(lang, item)}</option>
+                    ))}
                   </select>
                 </label>
               )}
             </div>
 
-            <div className="builder-footer">
-              <div className="qty-box">
-                <span>{t.qty}</span>
-                <div className="stepper">
-                  <button onClick={() => setMochiQuantity((prev) => Math.max(1, prev - 1))}>−</button>
-                  <strong>{mochiQuantity}</strong>
-                  <button onClick={() => setMochiQuantity((prev) => prev + 1)}>+</button>
-                </div>
-              </div>
-              <div className="subtotal-box">
-                <span>{t.subtotal}</span>
-                <strong>{formatPrice(currentMochiSubtotal)}</strong>
-              </div>
-              <button className="primary-button" onClick={addMochiItem}>{t.addToOrder}</button>
-            </div>
+            <BuilderFooter
+              t={t}
+              qty={mochiQuantity}
+              onQtyChange={setMochiQuantity}
+              subtotal={currentMochiSubtotal}
+              onAdd={addMochiItem}
+              addedFlash={mochiAddedFlash}
+            />
           </div>
         )}
       </section>
 
+      {/* ── Order Summary ── */}
       <section className="summary-grid">
         <div className="section-card">
           <div className="section-head"><h2>{t.orderSummary}</h2></div>
-          {orderItems.length === 0 ? <p className="empty-text">{t.emptyOrder}</p> : (
+
+          {orderItems.length === 0 ? (
+            <p className="empty-text">{t.emptyOrder}</p>
+          ) : (
             <div className="order-list">
               {orderItems.map((item) => (
                 <div className="order-item" key={item.id}>
@@ -783,7 +995,10 @@ export default function App() {
                   </div>
                   <div className="order-side">
                     <strong>{formatPrice(item.subtotal)}</strong>
-                    <button className="remove-button" onClick={() => removeOrderItem(item.id)}>{t.remove}</button>
+                    {/* FIX: confirm before removing */}
+                    <button className="remove-button" onClick={() => removeOrderItem(item.id, item.title)}>
+                      {t.remove}
+                    </button>
                   </div>
                 </div>
               ))}
@@ -793,6 +1008,8 @@ export default function App() {
               </div>
             </div>
           )}
+
+          {/* Payment Method */}
           <div className="payment-card">
             <h3>{t.paymentMethod}</h3>
             <div className="payment-options">
@@ -811,16 +1028,21 @@ export default function App() {
                 {t.qrPayment}
               </button>
             </div>
-            {paymentMethod === "qr" && (
-              <p className="payment-note">{t.qrNote}</p>
-            )}
+            {paymentMethod === "qr" && <p className="payment-note">{t.qrNote}</p>}
           </div>
 
           <p className="help-text">{t.reminder}</p>
-          <button className="checkout-button" onClick={handleWhatsAppCheckout} disabled={pickupDetails.closed || noAvailableTime}>{t.orderNow}</button>
+          <button
+            className="checkout-button"
+            onClick={handleWhatsAppCheckout}
+            disabled={pickupDetails.closed || noAvailableTime || orderItems.length === 0}
+          >
+            {t.orderNow}
+          </button>
         </div>
       </section>
 
+      {/* ── Footer ── */}
       <footer className="site-footer">
         <div className="footer-brand">
           <img src="/logo.png" alt="JojoBakes Logo" className="footer-logo" />

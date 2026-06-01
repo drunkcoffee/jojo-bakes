@@ -161,15 +161,14 @@ const translations = {
 
 // ─── Schedule & Time Data ─────────────────────────────────────────────────────
 const pickupSchedule = {
-  0: { zh: "Bukit Siput", en: "Bukit Siput" },
-  1: { zh: "Jementah", en: "Jementah" },
-  2: { zh: "Yayasan", en: "Yayasan" },
-  3: null, // Wednesday closed
-  4: { zh: "Kampung Tengah", en: "Kampung Tengah" },
-  5: { zh: "Yayasan", en: "Yayasan" },
-  6: { zh: "Kampung Tengah", en: "Kampung Tengah" },
+  0: { zh: "-", en: "-" },
+  1: { zh: "-", en: "-" },
+  2: { zh: "-", en: "-" },
+  3: { zh: "-", en: "-" },
+  4: { zh: "-", en: "-" },
+  5: { zh: "-", en: "-" },
+  6: { zh: "-", en: "-" },
 };
-
 const weekdayNames = {
   zh: ["星期日", "星期一", "星期二", "星期三", "星期四", "星期五", "星期六"],
   en: ["Sunday", "Monday", "Tuesday", "Wednesday", "Thursday", "Friday", "Saturday"],

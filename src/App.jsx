@@ -27,7 +27,7 @@ const translations = {
     day: "星期",
     location: "取货地点",
     closed: "休息 / 不营业",
-    closedNote: "星期三休息，请选择其他日期。",
+    closedNote: "每天营业",
     businessHours: "营业时间",
     businessHoursValue: "6:45 PM - 10:30 PM",
     categoryTitle: "选择类别",
@@ -72,7 +72,7 @@ const translations = {
     lessSweet: "少甜",
     flavourLine: "口味",
     footerTag: "让你食指大动的美食",
-    footerNote: "仅限自取 · 摆摊地点会根据日期自动显示 · 星期三休息",
+    footerNote: "仅限自取 · 每天营业",
     footerHours: "营业时间 6:45 PM – 10:30 PM",
     footerCta: "WhatsApp 下单",
     paymentMethod: "付款方式",
@@ -100,7 +100,7 @@ const translations = {
     day: "Day",
     location: "Pickup Location",
     closed: "Closed / Unavailable",
-    closedNote: "Wednesday is closed. Please choose another date.",
+    closedNote: "Open Daily",
     businessHours: "Business Hours",
     businessHoursValue: "6:45 PM - 10:30 PM",
     categoryTitle: "Choose Category",
@@ -146,7 +146,7 @@ const translations = {
     flavourLine: "Flavour",
     footerTag: "Fresh bites worth craving",
     footerNote:
-      "Self pickup only · Stall location changes by date · Wednesday closed",
+      "Self pickup only · Open Daily",
     footerHours: "Business Hours 6:45 PM – 10:30 PM",
     footerCta: "WhatsApp Order",
     paymentMethod: "Payment Method",
@@ -169,6 +169,7 @@ const pickupSchedule = {
   5: { zh: "-", en: "-" },
   6: { zh: "-", en: "-" },
 };
+
 const weekdayNames = {
   zh: ["星期日", "星期一", "星期二", "星期三", "星期四", "星期五", "星期六"],
   en: ["Sunday", "Monday", "Tuesday", "Wednesday", "Thursday", "Friday", "Saturday"],
@@ -216,6 +217,8 @@ const classicItems = [
 ];
 
 const specialItems = [
+  { id: "pistachio_kunafa", zh: "开心果 Kunafa", en: "Pistachio Kunafa", price: 13 },
+  { id: "double_pistachio_kunafa", zh: "开心果 + 开心果 Kunafa", en: "Double Pistachio Kunafa", price: 15 },
   { id: "pistachio", zh: "Pistachio 开心果", en: "Pistachio", price: 11 },
   { id: "pistachio_choco", zh: "开心果 + 巧克力", en: "Pistachio + Chocolate", price: 13 },
   { id: "coffee_peanut", zh: "咖啡花生", en: "Coffee Peanut", price: 6 },
@@ -256,12 +259,12 @@ const drinksItems = [
   { id: "matcha_choco", zh: "抹茶 Choco", en: "Matcha Choco", price: 10 },
   { id: "strawberry_matcha", zh: "草莓抹茶", en: "Strawberry Matcha", price: 10 },
   { id: "matcha_latte", zh: "抹茶拿铁", en: "Matcha Latte", price: 9 },
-  { id: "orange_matcha", zh: "香橙抹茶", en: "Orange Matcha", price: 10 },
   { id: "strawberry_cocoa", zh: "草莓可可", en: "Strawberry Cocoa", price: 8 },
   { id: "jasmine_matcha", zh: "茉莉抹茶", en: "Jasmine Matcha", price: 10 },
-  { id: "coconut_matcha", zh: "冰椰抹茶", en: "Coconut Matcha", price: 8 },
   { id: "matcha_honey", zh: "抹茶 Honey", en: "Matcha Honey", price: 9 },
   { id: "cocoa_only", zh: "可可而已", en: "Cocoa Only", price: 6 },
+  { id: "thai_milk_tea_boba", zh: "珍珠泰式奶茶", en: "Thai Milk Tea + Boba", price: 7 },
+  { id: "cocoa_boba", zh: "珍珠可可", en: "Cocoa + Boba", price: 7 },
 ];
 
 const mochiTiers = {

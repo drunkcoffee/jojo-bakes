@@ -1,0 +1,268 @@
+[
+  {
+    "sourceFile": "public/assets/raw/jojo/drinks-menu.jpeg",
+    "outputFile": "drink-strawberry-matcha.webp",
+    "type": "drink",
+    "suggestedUse": "drink-card",
+    "width": 900,
+    "height": 1080,
+    "transparentBackground": false,
+    "fileSizeBytes": 29358
+  },
+  {
+    "sourceFile": "public/assets/raw/jojo/drinks-menu.jpeg",
+    "outputFile": "drink-matcha-choco.webp",
+    "type": "drink",
+    "suggestedUse": "drink-card",
+    "width": 900,
+    "height": 1080,
+    "transparentBackground": false,
+    "fileSizeBytes": 25938
+  },
+  {
+    "sourceFile": "public/assets/raw/jojo/drinks-menu.jpeg",
+    "outputFile": "drink-matcha-latte.webp",
+    "type": "drink",
+    "suggestedUse": "drink-card",
+    "width": 900,
+    "height": 1080,
+    "transparentBackground": false,
+    "fileSizeBytes": 14668
+  },
+  {
+    "sourceFile": "public/assets/raw/jojo/drinks-menu.jpeg",
+    "outputFile": "drink-thai-milk-tea.webp",
+    "type": "drink",
+    "suggestedUse": "drink-card",
+    "width": 900,
+    "height": 1080,
+    "transparentBackground": false,
+    "fileSizeBytes": 13622
+  },
+  {
+    "sourceFile": "public/assets/raw/jojo/drinks-menu.jpeg",
+    "outputFile": "drink-matcha-honey.webp",
+    "type": "drink",
+    "suggestedUse": "drink-card",
+    "width": 900,
+    "height": 1080,
+    "transparentBackground": false,
+    "fileSizeBytes": 12908
+  },
+  {
+    "sourceFile": "public/assets/raw/jojo/drinks-menu.jpeg",
+    "outputFile": "drink-cocoa.webp",
+    "type": "drink",
+    "suggestedUse": "drink-card",
+    "width": 900,
+    "height": 1080,
+    "transparentBackground": false,
+    "fileSizeBytes": 20656
+  },
+  {
+    "sourceFile": "public/assets/raw/jojo/drinks-menu.jpeg",
+    "outputFile": "drink-jasmine-matcha.webp",
+    "type": "drink",
+    "suggestedUse": "drink-card",
+    "width": 900,
+    "height": 1080,
+    "transparentBackground": false,
+    "fileSizeBytes": 11150
+  },
+  {
+    "sourceFile": "public/assets/raw/jojo/drinks-menu.jpeg",
+    "outputFile": "drink-strawberry-cocoa.webp",
+    "type": "drink",
+    "suggestedUse": "drink-card",
+    "width": 900,
+    "height": 1080,
+    "transparentBackground": false,
+    "fileSizeBytes": 15260
+  },
+  {
+    "sourceFile": "public/assets/raw/jojo/drinks-menu.jpeg",
+    "outputFile": "drink-pearl-cocoa.webp",
+    "type": "drink",
+    "suggestedUse": "drink-card",
+    "width": 900,
+    "height": 1080,
+    "transparentBackground": false,
+    "fileSizeBytes": 20656
+  },
+  {
+    "sourceFile": "public/assets/raw/jojo/waffle-matcha-chocolate-original.jpeg",
+    "outputFile": "waffle-classic.webp",
+    "type": "waffle",
+    "suggestedUse": "product-card",
+    "width": 900,
+    "height": 1080,
+    "transparentBackground": false,
+    "fileSizeBytes": 101674,
+    "productId": "classic",
+    "displayName": "经典口味",
+    "manuallyAssigned": true
+  },
+  {
+    "sourceFile": "public/assets/raw/jojo/waffle-matcha-peanut-original.jpeg",
+    "outputFile": "waffle-peanut-coffee.webp",
+    "type": "waffle",
+    "suggestedUse": "product-card",
+    "width": 900,
+    "height": 1080,
+    "transparentBackground": false,
+    "fileSizeBytes": 98208,
+    "productId": "peanut-coffee",
+    "displayName": "咖啡花生",
+    "manuallyAssigned": true
+  },
+  {
+    "sourceFile": "public/assets/products/waffle-matcha-chocolate.jpg",
+    "outputFile": "waffle-matcha-chocolate.webp",
+    "type": "waffle",
+    "suggestedUse": "product-card",
+    "width": 900,
+    "height": 1080,
+    "transparentBackground": false,
+    "fileSizeBytes": 183436
+  },
+  {
+    "sourceFile": "public/assets/products/waffle-matcha-lotus.jpg",
+    "outputFile": "waffle-matcha-lotus.webp",
+    "type": "waffle",
+    "suggestedUse": "product-card",
+    "width": 900,
+    "height": 1080,
+    "transparentBackground": false,
+    "fileSizeBytes": 214168
+  },
+  {
+    "sourceFile": "public/assets/products/waffle-apam-balik.jpg",
+    "outputFile": "waffle-apam-balik.webp",
+    "type": "waffle",
+    "suggestedUse": "product-card",
+    "width": 900,
+    "height": 1080,
+    "transparentBackground": false,
+    "fileSizeBytes": 84170
+  },
+  {
+    "sourceFile": "public/assets/products/waffle-mayo-chicken-floss.jpg",
+    "outputFile": "waffle-mayo-chicken-floss.webp",
+    "type": "waffle",
+    "suggestedUse": "product-card",
+    "width": 900,
+    "height": 1080,
+    "transparentBackground": false,
+    "fileSizeBytes": 93428
+  },
+  {
+    "sourceFile": "public/assets/products/waffle-chicken-floss-taro.jpg",
+    "outputFile": "waffle-chicken-floss-taro.webp",
+    "type": "waffle",
+    "suggestedUse": "product-card",
+    "width": 900,
+    "height": 1080,
+    "transparentBackground": false,
+    "fileSizeBytes": 216712
+  },
+  {
+    "sourceFile": "public/assets/raw/jojo/waffle-taro-original.jpeg",
+    "outputFile": "waffle-taro.webp",
+    "type": "waffle",
+    "suggestedUse": "product-card",
+    "width": 900,
+    "height": 1080,
+    "transparentBackground": false,
+    "fileSizeBytes": 56176
+  },
+  {
+    "sourceFile": "public/assets/products/waffle-mochi-pull.jpg",
+    "outputFile": "waffle-mochi-pull.webp",
+    "type": "waffle",
+    "suggestedUse": "product-card",
+    "width": 900,
+    "height": 1080,
+    "transparentBackground": false,
+    "fileSizeBytes": 132522
+  },
+  {
+    "sourceFile": "public/assets/products/waffle-pistachio-kunafa.jpg",
+    "outputFile": "waffle-pistachio-kunafa.webp",
+    "type": "waffle",
+    "suggestedUse": "product-card",
+    "width": 900,
+    "height": 1080,
+    "transparentBackground": false,
+    "fileSizeBytes": 164254
+  },
+  {
+    "sourceFile": "public/assets/products/waffle-nutella.jpg",
+    "outputFile": "waffle-nutella.webp",
+    "type": "waffle",
+    "suggestedUse": "product-card",
+    "width": 900,
+    "height": 1080,
+    "transparentBackground": false,
+    "fileSizeBytes": 117262
+  },
+  {
+    "sourceFile": "public/assets/products/waffle-choco-crunch-ball.jpg",
+    "outputFile": "waffle-choco-crunch-ball.webp",
+    "type": "waffle",
+    "suggestedUse": "product-card",
+    "width": 900,
+    "height": 1080,
+    "transparentBackground": false,
+    "fileSizeBytes": 188054
+  },
+  {
+    "sourceFile": "public/assets/raw/jojo/stall-rain-night.jpeg",
+    "outputFile": "stall-hero-night.webp",
+    "type": "stall",
+    "suggestedUse": "hero-bg",
+    "width": 1600,
+    "height": 900,
+    "transparentBackground": false,
+    "fileSizeBytes": 253708
+  },
+  {
+    "sourceFile": "public/assets/raw/jojo/stall-rain-night.jpeg",
+    "outputFile": "stall-rain-night.webp",
+    "type": "stall",
+    "suggestedUse": "section-bg",
+    "width": 1600,
+    "height": 900,
+    "transparentBackground": false,
+    "fileSizeBytes": 191620
+  },
+  {
+    "sourceFile": "public/assets/raw/jojo/stall-rain-night.jpeg",
+    "outputFile": "stall-menu-table.webp",
+    "type": "stall",
+    "suggestedUse": "section-bg",
+    "width": 1600,
+    "height": 900,
+    "transparentBackground": false,
+    "fileSizeBytes": 191820
+  },
+  {
+    "sourceFile": "public/assets/raw/jojo/stall-rain-night.jpeg",
+    "outputFile": "jojo-waffle-hero-bg.webp",
+    "type": "hero",
+    "suggestedUse": "hero-bg",
+    "width": 1600,
+    "height": 900,
+    "transparentBackground": false,
+    "fileSizeBytes": 201918
+  },
+  {
+    "sourceFile": "public/assets/raw/jojo/logo.png",
+    "outputFile": "logo-jojo-bakes.webp",
+    "type": "logo",
+    "suggestedUse": "brand-header",
+    "width": 500,
+    "height": 500,
+    "transparentBackground": true,
+    "fileSizeBytes": 12950
+  }
+]

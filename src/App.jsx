@@ -1,1074 +1,193 @@
-import { useMemo, useState, useCallback } from "react";
-import "./App.css";
+import { useMemo, useState } from 'react';
 
-// ─── Constants ────────────────────────────────────────────────────────────────
-const WHATSAPP_NUMBER = "601110788823";
-const instagramUrl = "https://instagram.com/jojo.bakess";
-const whatsappUrl = `https://wa.me/${WHATSAPP_NUMBER}`;
-const CLASSIC_PRICE = 5;
-const ADVANCE_DAYS = 7; // how many days ahead users can book
+const WHATSAPP_NUMBER = '601110788823';
+const PICKUP_CONFIG = { pickupStart: '18:45', pickupEnd: '22:30', pickupIntervalMinutes: 10, pickupBufferMinutes: 15 };
+const photo = (file) => `/assets/products/${file}`;
+const money = (amount) => `RM${amount.toFixed(2)}`;
 
-// ─── Translations ─────────────────────────────────────────────────────────────
-const translations = {
-  zh: {
-    subtitle: "摆摊预订 · 自取下单",
-    heroText:
-      "现做华夫饼、麻薯华夫饼和饮料。网页会自动显示今天的摆摊地点与可取货时间，直接选餐后 WhatsApp 下单即可。",
-    lang: "EN",
-    viewMenu: "浏览完整菜单",
-    orderNowTop: "立即下单",
-    featuredTitle: "招牌推荐",
-    featuredText: "先看热卖，再往下快速下单。",
-    fullMenuTitle: "完整菜单",
-    fullMenuText: "先浏览 waffle、麻薯华夫饼与饮料菜单，再往下快速下单。",
-    scheduleTitle: "选择日期与取货时间",
-    date: "日期",
-    time: "预计取货时间",
-    day: "星期",
-    location: "取货地点",
-    closed: "休息 / 不营业",
-    closedNote: "每天营业",
-    businessHours: "营业时间",
-    businessHoursValue: "6:45 PM - 10:30 PM",
-    categoryTitle: "选择类别",
-    classicFlavour1: "第一口味",
-    classicFlavour2: "第二口味",
-    chooseOneOrTwo: "可选 1 到 2 个口味",
-    specialItem: "口味",
-    nutellaItem: "组合",
-    drinksItem: "饮料",
-    toppings: "加料",
-    sugarLevel: "糖度",
-    qty: "数量",
-    subtotal: "小计",
-    addToOrder: "加入订单",
-    added: "✓ 已加入！",
-    noTopping: "不加酱",
-    mochiStep1: "Step 1：选择麻薯方式",
-    mochiStep2: "Step 2：选择口味等级",
-    mochiStep3: "Step 3：选择口味",
-    mochiStyleInside: "A) 内烤麻薯",
-    mochiStyleOutside: "B) 外夹麻薯",
-    sameFlavourError: "第一口味和第二口味不能重复。",
-    orderSummary: "订单内容",
-    emptyOrder: "还没有加入商品。",
-    orderNow: "WhatsApp 下单",
-    reminder:
-      "所选时间为预计取货时间，若同一时段订单较多，实际等待时间将由 WhatsApp 再确认。",
-    orderGuideTitle: "下单方式",
-    orderGuide1: "先选日期，系统自动带出地点",
-    orderGuide2: "再选类别、口味、数量与加料",
-    orderGuide3: "最后按 WhatsApp 下单",
-    remove: "删除",
-    confirmRemove: "确定要删除这个商品吗？",
-    total: "总计",
-    chooseFirst: "请先完成必填选择",
-    instagram: "Instagram",
-    pickupNoteTitle: "取餐说明",
-    pickupNoteText:
-      "仅限自取。请先选择日期查看当天摆摊地点。最终取餐时间以 WhatsApp 确认为准。",
-    noSecondFlavour: "不选第二口味",
-    normalSweet: "正常",
-    lessSweet: "少甜",
-    flavourLine: "口味",
-    footerTag: "让你食指大动的美食",
-    footerNote: "仅限自取 · 每天营业",
-    footerHours: "营业时间 6:45 PM – 10:30 PM",
-    footerCta: "WhatsApp 下单",
-    paymentMethod: "付款方式",
-    cashPayment: "现金支付",
-    qrPayment: "QR 支付",
-    qrNote: "选择 QR 支付后，我们会在 WhatsApp 人工发送收款二维码给你。",
-    noSlotsToday: "今天可预约时间已结束，请选择其他日期。",
-    itemsInCart: "件商品",
-  },
-  en: {
-    subtitle: "Stall Pre-order · Self Pickup",
-    heroText:
-      "Fresh waffles, mochi waffles, and drinks made to order. Today's stall location and available pickup times are shown automatically, so you can order directly via WhatsApp.",
-    lang: "中文",
-    viewMenu: "Browse Menu",
-    orderNowTop: "Order Now",
-    featuredTitle: "Best Sellers",
-    featuredText: "See the top picks first, then order below.",
-    fullMenuTitle: "Full Menu",
-    fullMenuText:
-      "Browse our waffle, mochi waffle, and drinks menu before placing your order below.",
-    scheduleTitle: "Choose Date & Pickup Time",
-    date: "Date",
-    time: "Preferred Pickup Time",
-    day: "Day",
-    location: "Pickup Location",
-    closed: "Closed / Unavailable",
-    closedNote: "Open Daily",
-    businessHours: "Business Hours",
-    businessHoursValue: "6:45 PM - 10:30 PM",
-    categoryTitle: "Choose Category",
-    classicFlavour1: "First Flavour",
-    classicFlavour2: "Second Flavour",
-    chooseOneOrTwo: "Choose 1 or 2 flavours",
-    specialItem: "Flavour",
-    nutellaItem: "Combination",
-    drinksItem: "Drink",
-    toppings: "Extra",
-    sugarLevel: "Sweetness",
-    qty: "Quantity",
-    subtotal: "Subtotal",
-    addToOrder: "Add to Order",
-    added: "✓ Added!",
-    noTopping: "No extra sauce",
-    mochiStep1: "Step 1: Choose Mochi Style",
-    mochiStep2: "Step 2: Choose Price Tier",
-    mochiStep3: "Step 3: Choose Flavour",
-    mochiStyleInside: "A) Baked Inside",
-    mochiStyleOutside: "B) Mochi Outside",
-    sameFlavourError: "First and second flavours cannot be the same.",
-    orderSummary: "Order Summary",
-    emptyOrder: "No items added yet.",
-    orderNow: "Order via WhatsApp",
-    reminder:
-      "Selected time is a preferred pickup time. If multiple orders come in for the same slot, final waiting time will be confirmed via WhatsApp.",
-    orderGuideTitle: "How It Works",
-    orderGuide1: "Choose a date and location appears automatically",
-    orderGuide2: "Pick category, flavour, quantity, and extra",
-    orderGuide3: "Then send via WhatsApp",
-    remove: "Remove",
-    confirmRemove: "Remove this item from your order?",
-    total: "Total",
-    chooseFirst: "Please complete the required selections first",
-    instagram: "Instagram",
-    pickupNoteTitle: "Pickup Note",
-    pickupNoteText:
-      "Self pickup only. Please select the date to see the stall location. Final pickup time will be confirmed via WhatsApp.",
-    noSecondFlavour: "No second flavour",
-    normalSweet: "Normal",
-    lessSweet: "Less sweet",
-    flavourLine: "Flavour",
-    footerTag: "Fresh bites worth craving",
-    footerNote:
-      "Self pickup only · Open Daily",
-    footerHours: "Business Hours 6:45 PM – 10:30 PM",
-    footerCta: "WhatsApp Order",
-    paymentMethod: "Payment Method",
-    cashPayment: "Cash Payment",
-    qrPayment: "QR Payment",
-    qrNote:
-      "If you choose QR payment, we will send you the payment QR manually via WhatsApp.",
-    noSlotsToday: "Today's pickup slots are no longer available. Please choose another date.",
-    itemsInCart: "items",
-  },
-};
-
-// ─── Schedule & Time Data ─────────────────────────────────────────────────────
-const pickupSchedule = {
-  0: { zh: "-", en: "-" },
-  1: { zh: "-", en: "-" },
-  2: { zh: "-", en: "-" },
-  3: { zh: "-", en: "-" },
-  4: { zh: "-", en: "-" },
-  5: { zh: "-", en: "-" },
-  6: { zh: "-", en: "-" },
-};
-
-const weekdayNames = {
-  zh: ["星期日", "星期一", "星期二", "星期三", "星期四", "星期五", "星期六"],
-  en: ["Sunday", "Monday", "Tuesday", "Wednesday", "Thursday", "Friday", "Saturday"],
-};
-
-// Pre-generate all possible pickup times once
-const ALL_PICKUP_TIMES = (() => {
-  const times = [];
-  for (let totalMins = 18 * 60 + 45; totalMins <= 22 * 60 + 30; totalMins += 5) {
-    const h24 = Math.floor(totalMins / 60);
-    const m = totalMins % 60;
-    const suffix = h24 >= 12 ? "PM" : "AM";
-    const h12 = h24 > 12 ? h24 - 12 : h24;
-    times.push(`${h12}:${String(m).padStart(2, "0")} ${suffix}`);
-  }
-  return times;
-})();
-
-const sugarLevels = [
-  { zh: "正常", en: "Normal" },
-  { zh: "少甜", en: "Less sweet" },
+const classicFlavours = ['巧克力', '花生', '草莓', '牛油', '蜜糖', 'Kaya'];
+const cookieClassicFlavours = [...classicFlavours, 'Cookies & Cream'];
+const cookieSpecialFlavours = ['抹茶', '芋泥', 'Nutella'];
+const mochiTiers = [
+  { id: 'classic-mochi', label: '经典麻薯口味', price: 8, count: 2, flavours: classicFlavours },
+  { id: 'special-mochi', label: '特别麻薯口味', price: 10, count: 1, flavours: ['抹茶', '抹茶巧克力', 'Cookies & Cream', '芋泥', 'Apam Balik', 'Nutella'] },
+  { id: 'premium-mochi', label: 'Premium 麻薯口味', count: 1, flavours: ['芋泥鸡肉松', '鸡肉松芋泥麻薯', '开心果', '开心果巧克力 Kunafa', '开心果 Kunafa'], prices: { '芋泥鸡肉松': 12, '鸡肉松芋泥麻薯': 12, '开心果': 13, '开心果巧克力 Kunafa': 15, '开心果 Kunafa': 16 } },
 ];
 
-const toppingOptions = [
-  { id: "none", zh: "不加酱", en: "No extra sauce", price: 0 },
-  { id: "extra_sauce", zh: "加多酱", en: "Extra sauce", price: 1 },
+const products = [
+  { id: 'classic', category: 'classic', name: '经典口味', price: 5, badge: '经典', description: '可选一或两种喜欢的口味', image: photo('waffle-classic.webp'), kind: 'classic', available: true, optionGroups: [{ id: 'flavour', label: '选口味', choices: classicFlavours, min: 1, max: 2 }] },
+  { id: 'matcha-pairing', category: 'matcha', name: '抹茶酱搭配', price: 8, badge: '抹茶酱', description: '抹茶酱配喜欢的口味。', image: photo('waffle-matcha-chocolate.webp'), kind: 'matcha-series' },
+  { id: 'matcha-chocolate', category: 'special', name: '抹茶巧克力', price: 9, badge: '推荐', description: '不用选择，直接点就好。', image: photo('waffle-matcha-chocolate.webp') },
+  { id: 'matcha-lotus-crumbs', category: 'special', name: '抹茶 Lotus', price: 10, badge: 'Lotus', description: '不用选择，直接点就好。', image: photo('waffle-matcha-lotus.webp') },
+  { id: 'apam-balik', category: 'special', name: 'Apam Balik Waffle', price: 8, badge: '香脆', description: '花生香、边边脆，经典不会错。', image: photo('waffle-apam-balik.webp') },
+  { id: 'cookies-cream', category: 'special', name: 'Cookies & Cream', price: 7, badge: '奶香', description: '不用选择，直接点就好。', image: photo('waffle-cookies-cream-oreo.jpg') },
+  { id: 'taro-waffle', category: 'special', name: '芋泥 Waffle', price: 8, badge: '芋泥', description: '芋泥比较温柔，不会太腻。', image: photo('waffle-taro.webp') },
+  { id: 'mayo-floss', category: 'special', name: 'Mayo 鸡肉松', price: 8, badge: '咸甜', description: '咸甜口，越吃越顺。', image: photo('waffle-mayo-chicken-floss.webp') },
+  { id: 'floss-taro', category: 'special', name: '鸡肉松芋泥', price: 10, badge: '人气', description: '咸香鸡肉松配芋泥', image: photo('waffle-chicken-floss-taro.webp') },
+  { id: 'chocolate-coffee', category: 'special', name: '巧克力咖啡', price: 6, badge: '咖啡香', description: '巧克力配咖啡香', image: photo('waffle-peanut-coffee.webp') },
+  { id: 'peanut-coffee', category: 'special', name: '花生咖啡', price: 6, badge: '咖啡香', description: '花生配咖啡香', image: photo('waffle-peanut-coffee.webp') },
+  { id: 'kunafa', category: 'kunafa', name: '开心果 Kunafa 系列', price: 11, badge: '浓一点', description: '酥脆 Kunafa 搭配开心果酱，适合喜欢浓一点口味的。', image: photo('waffle-pistachio-kunafa.webp'), kind: 'kunafa' },
+  { id: 'oreo', category: 'cookies', name: 'Oreo 系列', price: 7, badge: 'Oreo 饼干碎', description: '每份都有 Oreo 饼干碎，选一种口味。', image: photo('waffle-chocolate-oreo.jpg'), kind: 'cookie-series' },
+  { id: 'lotus', category: 'cookies', name: 'Lotus 系列', price: 7, badge: 'Lotus 碎', description: '每份都有 Lotus 碎，选一种口味。', image: photo('waffle-matcha-lotus.jpg'), kind: 'cookie-series' },
+  { id: 'crunch', category: 'cookies', name: '脆脆珠系列', price: 7, badge: '脆脆珠', description: '每份都有脆脆珠，选一种口味。', image: photo('waffle-choco-crunch-ball.jpg'), kind: 'cookie-series' },
+  { id: 'nutella', category: 'nutella', name: 'Nutella 系列', price: 8, badge: '榛果巧克力', description: 'Nutella 系列都会有 Nutella 榛果巧克力酱，可再加一个经典口味。', image: photo('waffle-nutella.webp'), kind: 'nutella' },
+  { id: 'mochi', category: 'mochi', name: '拉丝麻薯', price: 8, badge: '拉丝麻薯', description: '内烤或外夹，再选口味', image: photo('waffle-mochi-pull.webp'), kind: 'mochi' },
 ];
 
-// ─── Menu Data ────────────────────────────────────────────────────────────────
+const drinkSettings = [
+  { id: 'sweetness', label: '甜度', choices: ['正常甜', '少甜'], min: 1, max: 1 },
+  { id: 'ice', label: '冰量', choices: ['正常冰', '少冰'], min: 1, max: 1 },
+];
+
+const drinks = [
+  ['matcha-latte', '抹茶拿铁', 9, '抹茶香，喝起来顺。', 'drink-matcha-latte.jpg'], ['matcha-choco', '抹茶巧克力', 10, '抹茶加可可，比较浓。', 'drink-matcha-choco.jpg'],
+  ['strawberry-matcha', '草莓抹茶', 10, '草莓酸甜', 'drink-strawberry-matcha.jpg'], ['jasmine-matcha', '茉莉抹茶', 10, '淡淡花香', 'drink-jasmine-matcha.jpg'],
+  ['thai-milk-tea', '珍珠泰式奶茶', 7, '甜香奶茶，已经有珍珠。', 'drink-thai-milk-tea.jpg'], ['pearl-cocoa', '珍珠可可', 7, '固定含珍珠', 'drink-pearl-cocoa.jpg'],
+  ['cocoa', '可可', 6, '小朋友也会喜欢。', 'drink-cocoa.jpg'], ['strawberry-cocoa', '草莓可可', 8, '草莓配可可', 'drink-strawberry-cocoa.jpg'],
+].map(([id, name, price, description, image]) => ({
+  id, category: 'drinks', name, price, description, image: photo(image), type: 'drink', kind: 'drink', available: true,
+  optionGroups: drinkSettings,
+  addOns: id === 'thai-milk-tea' || id === 'pearl-cocoa' ? [] : [{ id: 'pearl', label: '加珍珠', price: 1 }],
+}));
+
 const categories = [
-  { id: "classic", zh: "经典华夫饼", en: "Classic Waffle" },
-  { id: "special", zh: "特别口味", en: "Special Flavours" },
-  { id: "nutella", zh: "Nutella 系列", en: "Nutella Series" },
-  { id: "mochi", zh: "拉丝麻薯", en: "Mochi Waffle" },
-  { id: "drinks", zh: "饮料", en: "Drinks" },
+  ['features', '精选'], ['classic', '经典'], ['special', '特别'], ['cookies', '饼干'], ['nutella', 'Nutella'], ['drinks', '饮料'],
 ];
 
-const classicItems = [
-  { id: "chocolate", zh: "巧克力", en: "Chocolate" },
-  { id: "peanut", zh: "花生", en: "Peanut" },
-  { id: "strawberry", zh: "草莓", en: "Strawberry" },
-  { id: "butter", zh: "牛油", en: "Butter" },
-  { id: "honey", zh: "蜜糖", en: "Honey" },
-  { id: "kaya", zh: "Kaya", en: "Kaya" },
-];
-
-const specialItems = [
-  { id: "pistachio_kunafa", zh: "开心果 Kunafa", en: "Pistachio Kunafa", price: 13 },
-  { id: "double_pistachio_kunafa", zh: "开心果 + 开心果 Kunafa", en: "Double Pistachio Kunafa", price: 15 },
-  { id: "pistachio", zh: "Pistachio 开心果", en: "Pistachio", price: 11 },
-  { id: "pistachio_choco", zh: "开心果 + 巧克力", en: "Pistachio + Chocolate", price: 13 },
-  { id: "coffee_peanut", zh: "咖啡花生", en: "Coffee Peanut", price: 6 },
-  { id: "coffee_choco", zh: "咖啡巧克力", en: "Coffee Chocolate", price: 6 },
-  { id: "taro", zh: "Taro 芋泥", en: "Taro", price: 8 },
-  { id: "peanut_crush", zh: "花生 + 花生碎", en: "Peanut + Peanut Crumbs", price: 6 },
-  { id: "choco_oreo", zh: "巧克力 + Oreo", en: "Chocolate + Oreo", price: 7 },
-  { id: "choco_lotus", zh: "巧克力 + Lotus", en: "Chocolate + Lotus", price: 7 },
-  { id: "cookies_cream", zh: "Cookies & Cream Oreo", en: "Cookies & Cream Oreo", price: 7 },
-  { id: "matcha", zh: "抹茶", en: "Matcha", price: 8 },
-  { id: "matcha_choco", zh: "抹茶巧克力", en: "Matcha Chocolate", price: 9 },
-  { id: "matcha_oreo", zh: "抹茶 + Oreo", en: "Matcha + Oreo", price: 10 },
-  { id: "chicken_floss", zh: "鸡肉松美乃滋", en: "Chicken Floss Mayo", price: 8 },
-  { id: "taro_floss", zh: "芋泥 + 鸡肉松", en: "Taro + Chicken Floss", price: 10 },
-  { id: "double_lotus", zh: "Double Lotus Biscoff", en: "Double Lotus Biscoff", price: 10 },
-  { id: "apam_balik", zh: "Apam Balik", en: "Apam Balik", price: 8 },
-  { id: "pistachio_choco_kunafa", zh: "开心果+巧克力Kunafa", en: "Pistachio + Chocolate Kunafa", price: 13 },
-  { id: "choco_crispy", zh: "巧克力脆脆珠", en: "Chocolate Crispy Pearls", price: 7 },
-  { id: "choco_pistachio_kunafa", zh: "巧克力+开心果Kunafa", en: "Chocolate + Pistachio Kunafa", price: 10 },
-  { id: "matcha_choco_kunafa", zh: "抹茶+巧克力Kunafa", en: "Matcha + Chocolate Kunafa", price: 11 },
-];
-
-const nutellaItems = [
-  { id: "nutella", zh: "Nutella", en: "Nutella", price: 8 },
-  { id: "nutella_choco", zh: "Nutella + 巧克力", en: "Nutella + Chocolate", price: 9 },
-  { id: "nutella_strawberry", zh: "Nutella + 草莓", en: "Nutella + Strawberry", price: 9 },
-  { id: "nutella_peanut", zh: "Nutella + 花生", en: "Nutella + Peanut", price: 9 },
-  { id: "nutella_kaya", zh: "Nutella + Kaya", en: "Nutella + Kaya", price: 9 },
-  { id: "nutella_butter", zh: "Nutella + 牛油", en: "Nutella + Butter", price: 9 },
-  { id: "nutella_honey", zh: "Nutella + 蜜糖", en: "Nutella + Honey", price: 9 },
-  { id: "nutella_matcha", zh: "Nutella + 抹茶", en: "Nutella + Matcha", price: 10 },
-  { id: "nutella_oreo", zh: "Nutella + Oreo", en: "Nutella + Oreo", price: 10 },
-  { id: "nutella_lotus_sauce", zh: "Nutella + Lotus 酱", en: "Nutella + Lotus Spread", price: 11 },
-  { id: "nutella_lotus_crumbs", zh: "Nutella + Lotus 碎", en: "Nutella + Lotus Crumbs", price: 10 },
-];
-
-const drinksItems = [
-  { id: "matcha_choco", zh: "抹茶 Choco", en: "Matcha Choco", price: 10 },
-  { id: "strawberry_matcha", zh: "草莓抹茶", en: "Strawberry Matcha", price: 10 },
-  { id: "matcha_latte", zh: "抹茶拿铁", en: "Matcha Latte", price: 9 },
-  { id: "strawberry_cocoa", zh: "草莓可可", en: "Strawberry Cocoa", price: 8 },
-  { id: "jasmine_matcha", zh: "茉莉抹茶", en: "Jasmine Matcha", price: 10 },
-  { id: "matcha_honey", zh: "抹茶 Honey", en: "Matcha Honey", price: 9 },
-  { id: "cocoa_only", zh: "可可而已", en: "Cocoa Only", price: 6 },
-  { id: "thai_milk_tea_boba", zh: "珍珠泰式奶茶", en: "Thai Milk Tea + Boba", price: 7 },
-  { id: "cocoa_boba", zh: "珍珠可可", en: "Cocoa + Boba", price: 7 },
-];
-
-const mochiTiers = {
-  classic: {
-    id: "classic",
-    labelZh: "经典 RM8",
-    labelEn: "Classic RM8",
-    price: 8,
-    options: classicItems,
-  },
-  special: {
-    id: "special",
-    labelZh: "特别 RM10",
-    labelEn: "Special RM10",
-    price: 10,
-    options: [
-      { id: "m_matcha", zh: "抹茶", en: "Matcha" },
-      { id: "m_nutella", zh: "Nutella", en: "Nutella" },
-      { id: "m_cookies_cream", zh: "Cookies & Cream Oreo", en: "Cookies & Cream Oreo" },
-      { id: "m_taro", zh: "Taro", en: "Taro" },
-      { id: "m_apam_balik", zh: "Apam Balik", en: "Apam Balik" },
-    ],
-  },
-  premium: {
-    id: "premium",
-    labelZh: "Premium RM12",
-    labelEn: "Premium RM12",
-    price: 12,
-    options: [
-      { id: "m_taro_floss", zh: "芋泥肉松麻薯", en: "Taro Chicken Floss Mochi" },
-      { id: "m_nutella_matcha", zh: "Nutella Matcha", en: "Nutella Matcha" },
-      { id: "m_lotus_crumbs", zh: "Lotus + Crumbs", en: "Lotus + Crumbs" },
-    ],
-  },
-};
-
-const featuredItems = [
-  { image: "/images/mochi-waffle-new.jpeg", titleZh: "拉丝麻薯", titleEn: "Mochi Waffle" },
-  { image: "/images/apam-balik-waffle.jpeg", titleZh: "Apam Balik 华夫饼", titleEn: "Apam Balik Waffle" },
-  { image: "/images/choco-oreo-waffle.jpeg", titleZh: "巧克力 Oreo", titleEn: "Chocolate Oreo" },
-  { image: "/images/hero-waffle.jpeg", titleZh: "招牌推荐", titleEn: "Signature Pick" },
-];
-
-const menuGallery = [
-  { image: "/menu/waffle-menu.jpeg", zh: "Waffle Menu", en: "Waffle Menu" },
-  { image: "/menu/mochi-menu.jpeg", zh: "Mochi Waffle Menu", en: "Mochi Waffle Menu" },
-  { image: "/menu/drinks-menu.jpeg", zh: "Drinks Menu", en: "Drinks Menu" },
-];
-
-// ─── Helpers ──────────────────────────────────────────────────────────────────
-function formatPrice(value) {
-  return `RM${value}`;
+function ProductImage({ product, className = '' }) {
+  const [missing, setMissing] = useState(false);
+  if (!product.image || missing) return <div className={`image-fallback ${product.type === 'drink' ? 'drink-fallback' : ''} ${className}`} role="img" aria-label={`${product.name} 图片暂缺`}><span>{product.type === 'drink' ? '🧋' : '🧇'}</span></div>;
+  return <img className={className} src={product.image} alt={product.name} loading="lazy" onError={() => setMissing(true)} />;
 }
 
-function getText(lang, item) {
-  return lang === "zh" ? item.zh : item.en;
+function ProductCard({ product, onAdd }) {
+  return <article id={product.category === 'mochi' ? 'mochi' : undefined} className={`product-card ${product.type === 'drink' ? 'drink-card' : ''}`}>
+    <div className="product-photo"><ProductImage product={product} /><span>{product.available === false ? '已售完' : product.badge || (product.type === 'drink' ? '现点现调' : '现点现烤')}</span></div>
+      <div className="product-info"><h3>{product.name}</h3><p>{product.description}</p><div><b>{money(product.price)}</b><button type="button" aria-label={`加入${product.name}`} disabled={product.available === false} onClick={() => onAdd(product)}> {product.available === false ? '售完' : '加入'}</button></div></div>
+  </article>;
 }
 
-/** Returns YYYY-MM-DD string for a Date object, in local time */
-function toDateString(date) {
-  return `${date.getFullYear()}-${String(date.getMonth() + 1).padStart(2, "0")}-${String(date.getDate()).padStart(2, "0")}`;
+function SeriesCard({ product, options, onAdd, title = product.name, seriesLabel = null, showStartingPrice = true, className = '' }) {
+  const [selectedName, setSelectedName] = useState(options[0].name);
+  const [expanded, setExpanded] = useState(false);
+  const [hasSelected, setHasSelected] = useState(false);
+  const selected = options.find((option) => option.name === selectedName) || options[0];
+  return <article className={`series-card ${className}`}>
+    <div className="series-photo"><ProductImage product={product} /><span>{product.available === false ? '已售完' : product.badge}</span></div>
+    <div className="series-content"><div className="series-heading"><div><h3>{title}</h3><p>{product.description}</p></div>{showStartingPrice && <b>RM{Math.min(...options.map((option) => option.price))} 起</b>}</div><div className="series-selected"><span>{hasSelected ? '你选了' : '先帮你选'}</span><b>{selected.name}</b></div><button type="button" className="toggle-options" onClick={() => setExpanded((value) => !value)}>{expanded ? '收起选项' : hasSelected ? '展开选项' : '选择口味'}</button>{expanded && <div className="series-options">{options.map((option) => <button type="button" className={selected.name === option.name ? 'selected' : ''} key={option.name} onClick={() => { setSelectedName(option.name); setHasSelected(true); setExpanded(false); }}><span>{option.name}</span><b>{money(option.price)}</b></button>)}</div>}<div className="series-action"><strong>{money(selected.price)}</strong><button type="button" aria-label={`加入${title}`} disabled={product.available === false} onClick={() => onAdd(product, [...(seriesLabel ? [{ label: '系列', value: seriesLabel }] : []), { label: selected.label, value: selected.name }], selected.price)}>{product.available === false ? '售完' : '加入'}</button></div></div>
+  </article>;
 }
 
-/** Build selectable date options: today + next ADVANCE_DAYS days, skip closed days */
-function buildDateOptions(lang) {
-  const options = [];
+function minutesFromTime(value) { const [hours, minutes] = value.split(':').map(Number); return hours * 60 + minutes; }
+function clockLabel(minutes) { const hours = Math.floor(minutes / 60); const mins = minutes % 60; const suffix = hours >= 12 ? 'PM' : 'AM'; const twelve = hours % 12 || 12; return `${twelve}:${String(mins).padStart(2, '0')} ${suffix}`; }
+function orderCreatedAt() { return new Intl.DateTimeFormat('zh-MY', { dateStyle: 'medium', timeStyle: 'short', hour12: false }).format(new Date()); }
+function getPickupSlots() {
   const now = new Date();
-  for (let i = 0; i < ADVANCE_DAYS; i++) {
-    const d = new Date(now);
-    d.setDate(now.getDate() + i);
-    const dateStr = toDateString(d);
-    const dayIndex = d.getDay();
-    const closed = pickupSchedule[dayIndex] === null;
-    const dayLabel = weekdayNames[lang][dayIndex];
-    const label = `${dateStr} (${dayLabel})${closed ? (lang === "zh" ? " — 休息" : " — Closed") : ""}`;
-    options.push({ value: dateStr, label, closed, dayIndex });
-  }
-  return options;
+  const earliest = now.getHours() * 60 + now.getMinutes() + PICKUP_CONFIG.pickupBufferMinutes;
+  const start = minutesFromTime(PICKUP_CONFIG.pickupStart); const end = minutesFromTime(PICKUP_CONFIG.pickupEnd);
+  return Array.from({ length: Math.floor((end - start) / PICKUP_CONFIG.pickupIntervalMinutes) + 1 }, (_, index) => start + index * PICKUP_CONFIG.pickupIntervalMinutes)
+    .filter((minutes) => minutes >= earliest).map((minutes) => ({ value: minutes, label: clockLabel(minutes) }));
 }
 
-function roundUpToNextFiveMinutes(totalMinutes) {
-  return Math.ceil(totalMinutes / 5) * 5;
-}
-
-function getAvailablePickupTimes(dateStr) {
-  if (!dateStr) return ALL_PICKUP_TIMES;
-
-  const now = new Date();
-  const selectedDate = new Date(`${dateStr}T00:00:00`);
-  const isToday =
-    selectedDate.getFullYear() === now.getFullYear() &&
-    selectedDate.getMonth() === now.getMonth() &&
-    selectedDate.getDate() === now.getDate();
-
-  if (!isToday) return ALL_PICKUP_TIMES;
-
-  const currentMinutes = now.getHours() * 60 + now.getMinutes();
-  const earliestMinutes = roundUpToNextFiveMinutes(currentMinutes + 10);
-
-  return ALL_PICKUP_TIMES.filter((time) => {
-    const [timePart, suffix] = time.split(" ");
-    let [hour, minute] = timePart.split(":").map(Number);
-    if (suffix === "PM" && hour !== 12) hour += 12;
-    if (suffix === "AM" && hour === 12) hour = 0;
-    return hour * 60 + minute >= earliestMinutes;
-  });
-}
-
-function getPickupDetails(dateStr, lang) {
-  if (!dateStr) return { dayIndex: null, dayLabel: "-", locationLabel: "-", closed: false };
-  const date = new Date(`${dateStr}T12:00:00`);
-  const dayIndex = date.getDay();
-  const dayLabel = weekdayNames[lang][dayIndex];
-  const location = pickupSchedule[dayIndex];
-  const closed = location === null;
-  const locationLabel = closed ? translations[lang].closed : getText(lang, location);
-  return { dayIndex, dayLabel, locationLabel, closed };
-}
-
-function formatOrderCreatedAt() {
-  return new Intl.DateTimeFormat("en-MY", {
-    dateStyle: "medium",
-    timeStyle: "short",
-    hour12: false,
-  }).format(new Date());
-}
-
-function buildOrderMessage({ lang, items, pickupDate, pickupTime, pickupDay, pickupLocation, paymentMethod }) {
-  const t = translations[lang];
-  const lines = [];
-  lines.push(lang === "zh" ? "Hi JojoBakes，我想下单：" : "Hi JojoBakes, I would like to place an order:");
-  lines.push("");
-  lines.push(`${t.date}: ${pickupDate}`);
-  lines.push(`${t.day}: ${pickupDay}`);
-  lines.push(`${t.location}: ${pickupLocation}`);
-  lines.push(`${t.time}: ${pickupTime}`);
-  lines.push(`Order created: ${formatOrderCreatedAt()}`);
-  lines.push("");
-  lines.push(lang === "zh" ? "订单内容：" : "Order Items:");
-  items.forEach((item, index) => {
-    lines.push(`${index + 1}. ${item.title}`);
-    if (item.extraLine) lines.push(`   ${item.extraLine}`);
-    if (item.toppingLine) lines.push(`   ${item.toppingLine}`);
-    if (item.sugarLine) lines.push(`   ${item.sugarLine}`);
-    lines.push(`   ${t.qty}: ${item.quantity}`);
-    lines.push(`   ${t.subtotal}: ${formatPrice(item.subtotal)}`);
-  });
-  const total = items.reduce((sum, item) => sum + item.subtotal, 0);
-  const totalQuantity = items.reduce((sum, item) => sum + item.quantity, 0);
-  lines.push("");
-  lines.push(`${t.paymentMethod}: ${paymentMethod === "qr" ? "QR" : "Cash"}`);
-  lines.push(`Total quantity: ${totalQuantity}`);
-  lines.push(`${t.total}: ${formatPrice(total)}`);
-  lines.push("");
-  lines.push(t.reminder);
-  return lines.join("\n");
-}
-
-// ─── Sub-components ───────────────────────────────────────────────────────────
-
-/** Quantity stepper: shared between waffle and mochi builders */
-function QuantityStepper({ value, onChange }) {
-  return (
-    <div className="stepper">
-      <button type="button" onClick={() => onChange(Math.max(1, value - 1))}>−</button>
-      <strong>{value}</strong>
-      <button type="button" onClick={() => onChange(value + 1)}>+</button>
-    </div>
-  );
-}
-
-/** Builder footer row (qty + subtotal + CTA) */
-function BuilderFooter({ t, qty, onQtyChange, subtotal, onAdd, addedFlash }) {
-  return (
-    <div className="builder-footer">
-      <div className="qty-box">
-        <span>{t.qty}</span>
-        <QuantityStepper value={qty} onChange={onQtyChange} />
-      </div>
-      <div className="subtotal-box">
-        <span>{t.subtotal}</span>
-        <strong>{formatPrice(subtotal)}</strong>
-      </div>
-      <button className={`primary-button ${addedFlash ? "flash" : ""}`} onClick={onAdd}>
-        {addedFlash ? t.added : t.addToOrder}
-      </button>
-    </div>
-  );
-}
-
-// ─── Main App ─────────────────────────────────────────────────────────────────
 export default function App() {
-  const [lang, setLang] = useState("zh");
-  const t = translations[lang];
+  const [cart, setCart] = useState([]);
+  const [customising, setCustomising] = useState(null);
+  const [choices, setChoices] = useState([]);
+  const [mochiStyle, setMochiStyle] = useState('');
+  const [mochiTier, setMochiTier] = useState('');
+  const [drinkSweetness, setDrinkSweetness] = useState('');
+  const [drinkIce, setDrinkIce] = useState('');
+  const [drinkPearl, setDrinkPearl] = useState('');
+  const [optionWarning, setOptionWarning] = useState('');
+  const [pendingItem, setPendingItem] = useState(null);
+  const [pendingQuantity, setPendingQuantity] = useState(1);
+  const [cartOpen, setCartOpen] = useState(false);
+  const [pickupTime, setPickupTime] = useState('');
+  const [pickupWarning, setPickupWarning] = useState(false);
+  const pickupSlots = useMemo(getPickupSlots, []);
+  const total = useMemo(() => cart.reduce((sum, item) => sum + item.unitPrice * item.quantity, 0), [cart]);
+  const quantity = cart.reduce((sum, item) => sum + item.quantity, 0);
 
-  // ── Date & Time ──
-  const todayStr = toDateString(new Date());
-  const [pickupDate, setPickupDate] = useState(todayStr);
-  const [pickupTime, setPickupTime] = useState("");
-
-  const dateOptions = useMemo(() => buildDateOptions(lang), [lang]);
-  const availablePickupTimes = useMemo(() => getAvailablePickupTimes(pickupDate), [pickupDate]);
-  const noAvailableTime = availablePickupTimes.length === 0;
-  const pickupDetails = useMemo(() => getPickupDetails(pickupDate, lang), [pickupDate, lang]);
-
-  // Derive effective pickup time without setState-in-effect
-  const effectivePickupTime = useMemo(() => {
-    if (availablePickupTimes.length === 0) return "";
-    return availablePickupTimes.includes(pickupTime)
-      ? pickupTime
-      : availablePickupTimes[0];
-  }, [availablePickupTimes, pickupTime]);
-
-  // ── Category & Order Builder ──
-  const [category, setCategory] = useState("classic");
-  const [classicFlavour1, setClassicFlavour1] = useState(classicItems[0].id);
-  const [classicFlavour2, setClassicFlavour2] = useState("");
-  const [selectedSpecial, setSelectedSpecial] = useState(specialItems[0].id);
-  const [selectedNutella, setSelectedNutella] = useState(nutellaItems[0].id);
-  const [selectedDrink, setSelectedDrink] = useState(drinksItems[0].id);
-  const [selectedTopping, setSelectedTopping] = useState("none");
-  const [quantity, setQuantity] = useState(1);
-  const [drinkSugar, setDrinkSugar] = useState(sugarLevels[0].en);
-
-  // ── Mochi ──
-  const [mochiStyle, setMochiStyle] = useState("inside");
-  const [mochiTier, setMochiTier] = useState("classic");
-  const [selectedMochiOption1, setSelectedMochiOption1] = useState(mochiTiers.classic.options[0].id);
-  const [selectedMochiOption2, setSelectedMochiOption2] = useState("");
-  const [mochiQuantity, setMochiQuantity] = useState(1);
-
-  // ── Order ──
-  const [orderItems, setOrderItems] = useState([]);
-  const [paymentMethod, setPaymentMethod] = useState("cash");
-
-  // ── UX feedback ──
-  const [addedFlash, setAddedFlash] = useState(false); // "Added!" button flash
-  const [mochiAddedFlash, setMochiAddedFlash] = useState(false);
-
-  // ── Derived ──
-  const selectedToppingObj = toppingOptions.find((o) => o.id === selectedTopping) || toppingOptions[0];
-
-  const activeItem = useMemo(() => {
-    if (category === "special") return specialItems.find((i) => i.id === selectedSpecial);
-    if (category === "nutella") return nutellaItems.find((i) => i.id === selectedNutella);
-    if (category === "drinks") return drinksItems.find((i) => i.id === selectedDrink);
-    return null;
-  }, [category, selectedSpecial, selectedNutella, selectedDrink]);
-
-  const currentSubtotal = useMemo(() => {
-    if (category === "classic") return (CLASSIC_PRICE + selectedToppingObj.price) * quantity;
-    if (!activeItem) return 0;
-    if (category === "drinks") return activeItem.price * quantity;
-    return (activeItem.price + selectedToppingObj.price) * quantity;
-  }, [category, activeItem, selectedToppingObj.price, quantity]);
-
-  const currentMochiTier = mochiTiers[mochiTier];
-  const currentMochiSubtotal = currentMochiTier.price * mochiQuantity;
-  const orderTotal = orderItems.reduce((sum, item) => sum + item.subtotal, 0);
-
-  // ── Handlers ──
-  const handleCategoryChange = useCallback((next) => {
-    setCategory(next);
-    setQuantity(1);
-    setSelectedTopping("none");
-  }, []);
-
-  const handleMochiTierChange = useCallback((next) => {
-    setMochiTier(next);
-    setSelectedMochiOption1(mochiTiers[next].options[0].id);
-    setSelectedMochiOption2("");
-  }, []);
-
-  function flashAdded(setFlash) {
-    setFlash(true);
-    setTimeout(() => setFlash(false), 1500);
+  function beginAdd(product) {
+    if (product.kind) { setCustomising(product); setChoices([]); setMochiStyle(''); setMochiTier(''); setDrinkSweetness(''); setDrinkIce(''); setDrinkPearl(''); setOptionWarning(''); return; }
+    prepareItem(product, [], product.price);
   }
-
-  function addCurrentItem() {
-    if (category === "classic") {
-      if (classicFlavour2 !== "" && classicFlavour1 === classicFlavour2) {
-        alert(t.sameFlavourError);
-        return;
-      }
-      const f1 = classicItems.find((i) => i.id === classicFlavour1);
-      const f2 = classicItems.find((i) => i.id === classicFlavour2);
-      setOrderItems((prev) => [
-        ...prev,
-        {
-          id: `classic-${classicFlavour1}-${classicFlavour2}-${Date.now()}`,
-          title: getText(lang, categories.find((c) => c.id === "classic")),
-          extraLine: `${t.flavourLine}: ${getText(lang, f1)}${f2 ? ` + ${getText(lang, f2)}` : ""}`,
-          toppingLine:
-            selectedToppingObj.price > 0
-              ? `${t.toppings}: ${getText(lang, selectedToppingObj)} (+${formatPrice(selectedToppingObj.price)})`
-              : null,
-          sugarLine: null,
-          quantity,
-          subtotal: currentSubtotal,
-        },
-      ]);
-      setQuantity(1);
-      setSelectedTopping("none");
-      flashAdded(setAddedFlash);
-      return;
-    }
-
-    if (!activeItem) {
-      alert(t.chooseFirst);
-      return;
-    }
-
-    setOrderItems((prev) => [
-      ...prev,
-      {
-        id: `${category}-${activeItem.id}-${Date.now()}`,
-        title: `${getText(lang, categories.find((c) => c.id === category))} - ${getText(lang, activeItem)}`,
-        extraLine: null,
-        toppingLine:
-          category !== "drinks" && selectedToppingObj.price > 0
-            ? `${t.toppings}: ${getText(lang, selectedToppingObj)} (+${formatPrice(selectedToppingObj.price)})`
-            : null,
-        sugarLine:
-          category === "drinks"
-            ? `${t.sugarLevel}: ${lang === "zh" ? (drinkSugar === "Normal" ? t.normalSweet : t.lessSweet) : drinkSugar}`
-            : null,
-        quantity,
-        subtotal: currentSubtotal,
-      },
-    ]);
-    setQuantity(1);
-    setSelectedTopping("none");
-    flashAdded(setAddedFlash);
+  function prepareItem(product, options, unitPrice) {
+    setPendingItem({ product, options, unitPrice });
+    setPendingQuantity(1);
   }
-
-  function addMochiItem() {
-    if (mochiTier === "classic" && selectedMochiOption2 !== "" && selectedMochiOption1 === selectedMochiOption2) {
-      alert(t.sameFlavourError);
-      return;
-    }
-    const opt1 = currentMochiTier.options.find((i) => i.id === selectedMochiOption1);
-    const opt2 = currentMochiTier.options.find((i) => i.id === selectedMochiOption2);
-    setOrderItems((prev) => [
-      ...prev,
-      {
-        id: `mochi-${selectedMochiOption1}-${selectedMochiOption2}-${Date.now()}`,
-        title: getText(lang, categories.find((c) => c.id === "mochi")),
-        extraLine: `${lang === "zh" ? "麻薯方式" : "Mochi Style"}: ${
-          mochiStyle === "inside" ? t.mochiStyleInside : t.mochiStyleOutside
-        } · ${lang === "zh" ? currentMochiTier.labelZh : currentMochiTier.labelEn} · ${
-          t.flavourLine
-        }: ${getText(lang, opt1)}${opt2 ? ` + ${getText(lang, opt2)}` : ""}`,
-        toppingLine: null,
-        sugarLine: null,
-        quantity: mochiQuantity,
-        subtotal: currentMochiSubtotal,
-      },
-    ]);
-    setMochiQuantity(1);
-    flashAdded(setMochiAddedFlash);
-  }
-
-  // FIX: confirm before removing
-  function removeOrderItem(id, title) {
-    const msg = `${t.confirmRemove}\n"${title}"`;
-    if (window.confirm(msg)) {
-      setOrderItems((prev) => prev.filter((item) => item.id !== id));
-    }
-  }
-
-  function handleWhatsAppCheckout() {
-    if (pickupDetails.closed || orderItems.length === 0 || noAvailableTime) {
-      alert(lang === "zh" ? "请先完成日期和商品。" : "Please complete date and items first.");
-      return;
-    }
-    // FIX: paymentMethod now correctly passed
-    const message = buildOrderMessage({
-      lang,
-      items: orderItems,
-      pickupDate,
-      pickupTime: effectivePickupTime,
-      pickupDay: pickupDetails.dayLabel,
-      pickupLocation: pickupDetails.locationLabel,
-      paymentMethod, // ← was missing before
+  function addItem(product, options, unitPrice, requestedQuantity = 1) {
+    const key = `${product.id}-${options.map((option) => `${option.label}:${option.value}`).join('|')}`;
+    setCart((items) => {
+      const existing = items.find((item) => item.key === key);
+      if (existing) return items.map((item) => item.key === key ? { ...item, quantity: item.quantity + requestedQuantity } : item);
+      return [...items, { key, name: product.name, options, unitPrice, quantity: requestedQuantity }];
     });
-    window.open(`https://wa.me/${WHATSAPP_NUMBER}?text=${encodeURIComponent(message)}`, "_blank");
+    setCartOpen(true);
   }
+  function toggleChoice(flavour, maximum) { setOptionWarning(''); setChoices((current) => current.includes(flavour) ? current.filter((item) => item !== flavour) : current.length < maximum ? [...current, flavour] : current); }
+  function confirmOptions() {
+    if (!customising) return;
+    const classicOptions = customising.optionGroups?.[0];
+    if (customising.kind === 'classic' && choices.length < classicOptions.min) { setOptionWarning('请至少选一个口味'); return; }
+    if (customising.kind === 'mochi' && !mochiStyle) { setOptionWarning('麻薯方式也要选一下'); return; }
+    if (customising.kind === 'mochi' && (!mochiTier || choices.length !== mochiTier.count)) { setOptionWarning('先选一个口味哦'); return; }
+    if (customising.kind === 'drink' && (!drinkSweetness || !drinkIce)) { setOptionWarning('饮料甜度和冰量要选哦'); return; }
+    if (customising.kind === 'classic') prepareItem(customising, [{ label: classicOptions.label, value: choices.join(' + ') }], customising.price);
+    if (customising.kind === 'mochi') { const price = mochiTier.prices ? mochiTier.prices[choices[0]] : mochiTier.price; prepareItem(customising, [{ label: '方式', value: mochiStyle }, { label: '口味', value: choices.join(' + ') }], price); }
+    if (customising.kind === 'drink') { const pearl = customising.addOns?.find((addOn) => addOn.id === 'pearl'); prepareItem(customising, [{ label: customising.optionGroups[0].label, value: drinkSweetness }, { label: customising.optionGroups[1].label, value: drinkIce }, ...(drinkPearl && pearl ? [{ label: pearl.label, value: `+RM${pearl.price}` }] : [])], customising.price + (drinkPearl && pearl ? pearl.price : 0)); }
+    setCustomising(null);
+  }
+  function confirmAdd() {
+    if (!pendingItem) return;
+    addItem(pendingItem.product, pendingItem.options, pendingItem.unitPrice, pendingQuantity);
+    setPendingItem(null);
+  }
+  function updateQuantity(key, difference) { setCart((items) => items.flatMap((item) => item.key !== key ? [item] : item.quantity + difference > 0 ? [{ ...item, quantity: item.quantity + difference }] : [])); }
+  function checkout() {
+    if (!cart.length) { setCartOpen(true); return; }
+    if (!pickupSlots.length) { setCartOpen(true); return; }
+    if (!pickupTime) { setPickupWarning(true); setCartOpen(true); return; }
+    const lines = cart.map((item, index) => `${index + 1}. ${item.name} x${item.quantity}\n${item.options.map((option) => `   ${option.label}：${option.value}`).join('\n')}${item.options.length ? '\n' : ''}   ${money(item.unitPrice * item.quantity)}`).join('\n\n');
+    const message = `JOJO BAKES 点单\n\n顾客姓名：请填写\n下单时间：${orderCreatedAt()}\n取餐时间：${pickupTime}\n付款方式：Cash / QR\n\n订单内容：\n${lines}\n\n总数量：${quantity} 份\n总额：${money(total)}\n\n备注：请填写\n\n下单后请等我们 WhatsApp 确认。`;
+    window.location.href = `https://wa.me/${WHATSAPP_NUMBER}?text=${encodeURIComponent(message)}`;
+  }
+  const section = (id, eyebrow, title, list, extra = null, renderCard = null) => <section className="menu-section" id={id} aria-labelledby={`${id}-title`}><div className="section-heading"><div><small>{eyebrow}</small><h2 id={`${id}-title`}>{title}</h2></div>{extra}</div><div className={id === 'drinks' ? 'drink-list' : 'card-grid'}>{list.map((product) => renderCard ? renderCard(product) : <ProductCard key={product.id} product={product} onAdd={beginAdd} />)}</div></section>;
+  const specialItems = products.filter((product) => product.category === 'special');
 
-  // ── Render ──
-  return (
-    <div className="page-shell">
-      <div className="bg-orb orb-one" />
-      <div className="bg-orb orb-two" />
+  return <main className="shop"><style>{styles}</style>
+    <section className="hero"><div className="hero-top"><img className="brand-logo" src={photo('logo-jojo-bakes.webp')} alt="JOJO BAKES" /></div><div className="hero-copy"><p>TONIGHT’S SPECIAL · MADE FRESH</p><h1><strong>Good things happen</strong><br /><em>after sunset.</em></h1><span className="hero-feature">Chocolate Matcha Waffle</span><a href="#classic">WhatsApp 下单 <b>↓</b></a></div></section>
+    <nav className="category-tabs" aria-label="菜单分类">{categories.map(([id, label]) => <a href={`#${id}`} key={id}>{label}</a>)}</nav>
+    <div className="hero-chips"><span>🧇 现点现烤</span><span>⏱ 约 15 分钟</span><span>💵 Cash / QR</span><span>📲 WhatsApp 确认</span></div>
+    <div className="order-tip"><b>小提醒 ✨</b><span>选好后加入购物车，选取餐时间，再 WhatsApp 下单。</span></div>
+    <section className="menu-section feature-section" id="features"><div className="section-heading"><div><small>第一次点可以看这里</small><h2>Jojo 推荐 👍</h2></div><span>今晚最多人点这几款</span></div><div className="feature-grid">{products.filter((product) => product.category === 'matcha').map((product) => <SeriesCard key={product.id} className="feature-card matcha-feature" product={{ ...product, badge: '抹茶控' }} showStartingPrice={false} options={[{ name: '抹茶酱', price: 8, label: '选择' }, ...['花生', '巧克力', '草莓', '牛油', 'Kaya'].map((name) => ({ name, price: 9, label: '选择' })), ...['Oreo', 'Lotus Crumbs', '脆脆珠'].map((name) => ({ name, price: 10, label: '选择' }))]} onAdd={prepareItem} />)}{products.filter((product) => product.category === 'mochi').map((product) => <ProductCard key={product.id} product={{ ...product, badge: '会拉丝' }} onAdd={beginAdd} />)}{products.filter((product) => product.category === 'kunafa').map((product) => <SeriesCard key={product.id} className="feature-card kunafa-feature" product={{ ...product, badge: '浓郁脆脆' }} showStartingPrice={false} options={[{ name: '开心果酱', price: 11, label: '选择' }, { name: '开心果巧克力 Kunafa', price: 13, label: '选择' }, { name: '开心果 Kunafa', price: 14, label: '选择' }]} onAdd={prepareItem} />)}</div></section>
+    {section('classic', '简单好吃', '经典口味', products.filter((product) => product.category === 'classic'))}
+    {section('special', '固定口味', '特别口味', specialItems)}
+    {section('cookies', '选一种喜欢的饼干口味', '饼干系列', products.filter((product) => product.category === 'cookies'), null, (product) => { const suffix = product.name.replace('系列', ''); const join = (name) => suffix === '脆脆珠' ? `${name}${suffix}` : `${name} ${suffix}`; const options = [...cookieClassicFlavours.map((name) => ({ name: join(name), price: 7, label: '口味' })), ...cookieSpecialFlavours.map((name) => ({ name: join(name), price: 10, label: '口味' })), { name: join('开心果'), price: 13, label: '口味' }]; return <SeriesCard key={product.id} product={product} options={options} onAdd={prepareItem} />; })}
+    {section('nutella', 'Nutella 榛果巧克力酱已包含', 'Nutella 系列', products.filter((product) => product.category === 'nutella'), <span>RM8 起</span>, (product) => <SeriesCard key={product.id} product={product} options={[{ name: 'Nutella 本身', price: 8, label: '选择' }, ...classicFlavours.map((name) => ({ name, price: 9, label: '搭配' }))]} onAdd={prepareItem} />)}
+    {section('drinks', '配华夫饼刚刚好', '饮料', drinks)}
+    <section className="footer-note"><b>下单后我们会 WhatsApp 确认</b><span>如果现场太忙，可能会稍微等一下，但都会现烤给你。</span></section>
 
-      {/* ── Header ── */}
-      <header className="hero-card">
-        <div className="hero-topbar">
-          <img src="/logo.png" alt="JojoBakes Logo" className="brand-logo" />
-          <div style={{ display: "flex", alignItems: "center", gap: "0.75rem" }}>
-            {/* Cart badge shortcut */}
-            {orderItems.length > 0 && (
-              <a href="#order-section" className="cart-badge">
-                🛒 {orderItems.length} {t.itemsInCart}
-              </a>
-            )}
-            <button className="lang-button" onClick={() => setLang((prev) => (prev === "zh" ? "en" : "zh"))}>
-              {t.lang}
-            </button>
-          </div>
-        </div>
+    <aside className={`cart-dock ${cartOpen ? 'open' : ''}`} aria-label="购物车"><button className="cart-bar" type="button" onClick={() => setCartOpen((open) => !open)}><span>🛒 购物车 <b>{quantity}</b></span><strong>{quantity ? money(total) : '今晚想吃什么？'}</strong><i>{cartOpen ? '⌄' : '⌃'}</i></button>{cartOpen && <div className="cart-panel">{cart.length === 0 ? <p className="empty-cart">还没选哦，先挑一份今晚想吃的。</p> : <><div className="cart-items">{cart.map((item) => <article className="cart-item" key={item.key}><div><h3>{item.name}</h3>{item.options.map((option) => <p key={option.label}>{option.label}：{option.value}</p>)}<b>{money(item.unitPrice)}</b></div><div className="quantity"><button type="button" aria-label="减少数量" onClick={() => updateQuantity(item.key, -1)}>−</button><span>{item.quantity}</span><button type="button" aria-label="增加数量" onClick={() => updateQuantity(item.key, 1)}>+</button></div></article>)}</div><div className="pickup"><div><b>取餐时间</b><span>今天 · 每 {PICKUP_CONFIG.pickupIntervalMinutes} 分钟一个时段</span></div>{pickupSlots.length ? <div className="pickup-slots">{pickupSlots.map((slot) => <button type="button" className={pickupTime === slot.label ? 'selected' : ''} key={slot.value} onClick={() => { setPickupTime(slot.label); setPickupWarning(false); }}>{slot.label}</button>)}</div> : <p>今天已结束，明天再来找 Jojo。</p>}{pickupWarning && <em>请选择取餐时间</em>}</div><button className="checkout" type="button" disabled={!pickupSlots.length} onClick={checkout}>WhatsApp 下单 <span>{money(total)}</span></button></>}</div>}</aside>
 
-        <div className="hero-copy">
-          <h1 className="hero-title">Fresh waffle, made tonight.</h1>
-          <p className="hero-text">想吃 waffle，就找 Jojo.</p>
-          <div className="hero-actions">
-            <a href="#menu-gallery" className="primary-link">{t.viewMenu}</a>
-            <a href="#order-section" className="secondary-link">{t.orderNowTop}</a>
-          </div>
-        </div>
-
-        <div className="hero-image-wrap">
-          <img src="/images/mochi-waffle.jpeg" alt="Mochi Waffle" className="hero-image" />
-        </div>
-      </header>
-
-      {/* ── Featured + Guide ── */}
-      <section className="feature-grid">
-        <div className="feature-card">
-          <h3>{t.featuredTitle}</h3>
-          <p>{t.featuredText}</p>
-          <div className="featured-grid">
-            {featuredItems.map((item) => (
-              <div className="featured-item" key={item.image}>
-                <img src={item.image} alt={lang === "zh" ? item.titleZh : item.titleEn} />
-                <strong>{lang === "zh" ? item.titleZh : item.titleEn}</strong>
-              </div>
-            ))}
-          </div>
-        </div>
-
-        <div className="feature-card">
-          <h3>{t.orderGuideTitle}</h3>
-          <ul className="guide-list">
-            <li>{t.orderGuide1}</li>
-            <li>{t.orderGuide2}</li>
-            <li>{t.orderGuide3}</li>
-          </ul>
-          <div className="social-block">
-            <a href={instagramUrl} target="_blank" rel="noreferrer" className="instagram-link">
-              {t.instagram}: @jojo.bakess
-            </a>
-          </div>
-          <div className="pickup-note">
-            <h4>{t.pickupNoteTitle}</h4>
-            <p>{t.pickupNoteText}</p>
-          </div>
-        </div>
-      </section>
-
-      {/* ── Menu Gallery ── */}
-      <section className="section-card" id="menu-gallery">
-        <div className="section-head"><h2>{t.fullMenuTitle}</h2></div>
-        <p className="section-intro">{t.fullMenuText}</p>
-        <div className="menu-grid">
-          {menuGallery.map((item) => (
-            <a className="menu-card" href={item.image} target="_blank" rel="noreferrer" key={item.image}>
-              <img src={item.image} alt={getText(lang, item)} />
-              <p>{getText(lang, item)}</p>
-            </a>
-          ))}
-        </div>
-      </section>
-
-      {/* ── Schedule Section ── */}
-      <section className="section-card">
-        <div className="section-head"><h2>{t.scheduleTitle}</h2></div>
-        <div className="schedule-grid">
-          {/* FIX: date is now a real select, not hardcoded today */}
-          <label className="field">
-            <span>{t.date}</span>
-            <select value={pickupDate} onChange={(e) => setPickupDate(e.target.value)}>
-              {dateOptions.map((opt) => (
-                <option key={opt.value} value={opt.value} disabled={opt.closed}>
-                  {opt.label}
-                </option>
-              ))}
-            </select>
-          </label>
-
-          <label className="field">
-            <span>{t.time}</span>
-            <select
-              value={effectivePickupTime}
-              onChange={(e) => setPickupTime(e.target.value)}
-              disabled={noAvailableTime || pickupDetails.closed}
-            >
-              {availablePickupTimes.map((time) => (
-                <option value={time} key={time}>{time}</option>
-              ))}
-            </select>
-          </label>
-
-          <div className="info-box">
-            <small>{t.day}</small>
-            <strong>{pickupDetails.dayLabel}</strong>
-          </div>
-
-          <div className={`info-box ${pickupDetails.closed ? "is-closed" : ""}`}>
-            <small>{t.location}</small>
-            <strong>{pickupDetails.locationLabel}</strong>
-          </div>
-        </div>
-
-        <div className="hours-row">
-          <div className="hours-chip">
-            <span>{t.businessHours}</span>
-            <strong>{t.businessHoursValue}</strong>
-          </div>
-        </div>
-
-        {pickupDetails.closed && <p className="closed-note">{t.closedNote}</p>}
-        {noAvailableTime && !pickupDetails.closed && (
-          <p className="closed-note">{t.noSlotsToday}</p>
-        )}
-      </section>
-
-      {/* ── Order Builder ── */}
-      <section className="section-card" id="order-section">
-        <div className="section-head"><h2>{t.categoryTitle}</h2></div>
-        <div className="category-grid">
-          {categories.map((item) => (
-            <button
-              key={item.id}
-              className={`category-button ${category === item.id ? "active" : ""}`}
-              onClick={() => handleCategoryChange(item.id)}
-            >
-              {getText(lang, item)}
-            </button>
-          ))}
-        </div>
-
-        {/* Classic */}
-        {category === "classic" && (
-          <div className="builder-card">
-            <div className="builder-row two-select-row">
-              <label className="field">
-                <span>{t.classicFlavour1}</span>
-                <select value={classicFlavour1} onChange={(e) => setClassicFlavour1(e.target.value)}>
-                  {classicItems.map((item) => (
-                    <option value={item.id} key={item.id}>{getText(lang, item)}</option>
-                  ))}
-                </select>
-              </label>
-              <label className="field">
-                <span>{t.classicFlavour2}</span>
-                <select value={classicFlavour2} onChange={(e) => setClassicFlavour2(e.target.value)}>
-                  <option value="">{t.noSecondFlavour}</option>
-                  {classicItems
-                    .filter((item) => item.id !== classicFlavour1)
-                    .map((item) => (
-                      <option value={item.id} key={item.id}>{getText(lang, item)}</option>
-                    ))}
-                </select>
-              </label>
-              <label className="field">
-                <span>{t.toppings}</span>
-                <select value={selectedTopping} onChange={(e) => setSelectedTopping(e.target.value)}>
-                  {toppingOptions.map((item) => (
-                    <option value={item.id} key={item.id}>
-                      {getText(lang, item)}{item.price > 0 ? ` (+${formatPrice(item.price)})` : ""}
-                    </option>
-                  ))}
-                </select>
-              </label>
-            </div>
-            <p className="option-hint">{t.chooseOneOrTwo}</p>
-            <BuilderFooter
-              t={t}
-              qty={quantity}
-              onQtyChange={setQuantity}
-              subtotal={currentSubtotal}
-              onAdd={addCurrentItem}
-              addedFlash={addedFlash}
-            />
-          </div>
-        )}
-
-        {/* Special / Nutella / Drinks */}
-        {category !== "classic" && category !== "mochi" && (
-          <div className="builder-card">
-            <div className="builder-row">
-              <label className="field field-grow">
-                <span>
-                  {category === "special" ? t.specialItem : category === "nutella" ? t.nutellaItem : t.drinksItem}
-                </span>
-                <select
-                  value={category === "special" ? selectedSpecial : category === "nutella" ? selectedNutella : selectedDrink}
-                  onChange={(e) => {
-                    const next = e.target.value;
-                    if (category === "special") setSelectedSpecial(next);
-                    if (category === "nutella") setSelectedNutella(next);
-                    if (category === "drinks") setSelectedDrink(next);
-                  }}
-                >
-                  {(category === "special" ? specialItems : category === "nutella" ? nutellaItems : drinksItems).map((item) => (
-                    <option key={item.id} value={item.id}>
-                      {getText(lang, item)} · {formatPrice(item.price)}
-                    </option>
-                  ))}
-                </select>
-              </label>
-
-              {category === "drinks" ? (
-                <label className="field">
-                  <span>{t.sugarLevel}</span>
-                  <select value={drinkSugar} onChange={(e) => setDrinkSugar(e.target.value)}>
-                    {sugarLevels.map((level) => (
-                      <option value={level.en} key={level.en}>{lang === "zh" ? level.zh : level.en}</option>
-                    ))}
-                  </select>
-                </label>
-              ) : (
-                <label className="field">
-                  <span>{t.toppings}</span>
-                  <select value={selectedTopping} onChange={(e) => setSelectedTopping(e.target.value)}>
-                    {toppingOptions.map((item) => (
-                      <option value={item.id} key={item.id}>
-                        {getText(lang, item)}{item.price > 0 ? ` (+${formatPrice(item.price)})` : ""}
-                      </option>
-                    ))}
-                  </select>
-                </label>
-              )}
-            </div>
-            <BuilderFooter
-              t={t}
-              qty={quantity}
-              onQtyChange={setQuantity}
-              subtotal={currentSubtotal}
-              onAdd={addCurrentItem}
-              addedFlash={addedFlash}
-            />
-          </div>
-        )}
-
-        {/* Mochi */}
-        {category === "mochi" && (
-          <div className="builder-card mochi-card">
-            <div className="mochi-step">
-              <h3>{t.mochiStep1}</h3>
-              <div className="choice-grid two-cols">
-                <button className={`choice-button ${mochiStyle === "inside" ? "active" : ""}`} onClick={() => setMochiStyle("inside")}>{t.mochiStyleInside}</button>
-                <button className={`choice-button ${mochiStyle === "outside" ? "active" : ""}`} onClick={() => setMochiStyle("outside")}>{t.mochiStyleOutside}</button>
-              </div>
-            </div>
-
-            <div className="mochi-step">
-              <h3>{t.mochiStep2}</h3>
-              <div className="choice-grid three-cols">
-                {Object.values(mochiTiers).map((tier) => (
-                  <button
-                    key={tier.id}
-                    className={`choice-button ${mochiTier === tier.id ? "active" : ""}`}
-                    onClick={() => handleMochiTierChange(tier.id)}
-                  >
-                    {lang === "zh" ? tier.labelZh : tier.labelEn}
-                  </button>
-                ))}
-              </div>
-            </div>
-
-            <div className="mochi-step">
-              <h3>{t.mochiStep3}</h3>
-              {mochiTier === "classic" ? (
-                <>
-                  <div className="builder-row two-select-row">
-                    <label className="field">
-                      <span>{t.classicFlavour1}</span>
-                      <select value={selectedMochiOption1} onChange={(e) => setSelectedMochiOption1(e.target.value)}>
-                        {currentMochiTier.options.map((item) => (
-                          <option value={item.id} key={item.id}>{getText(lang, item)}</option>
-                        ))}
-                      </select>
-                    </label>
-                    <label className="field">
-                      <span>{t.classicFlavour2}</span>
-                      <select value={selectedMochiOption2} onChange={(e) => setSelectedMochiOption2(e.target.value)}>
-                        <option value="">{t.noSecondFlavour}</option>
-                        {currentMochiTier.options
-                          .filter((item) => item.id !== selectedMochiOption1)
-                          .map((item) => (
-                            <option value={item.id} key={item.id}>{getText(lang, item)}</option>
-                          ))}
-                      </select>
-                    </label>
-                  </div>
-                  <p className="option-hint">{t.chooseOneOrTwo}</p>
-                </>
-              ) : (
-                <label className="field">
-                  <span>{t.classicFlavour1}</span>
-                  <select value={selectedMochiOption1} onChange={(e) => setSelectedMochiOption1(e.target.value)}>
-                    {currentMochiTier.options.map((item) => (
-                      <option value={item.id} key={item.id}>{getText(lang, item)}</option>
-                    ))}
-                  </select>
-                </label>
-              )}
-            </div>
-
-            <BuilderFooter
-              t={t}
-              qty={mochiQuantity}
-              onQtyChange={setMochiQuantity}
-              subtotal={currentMochiSubtotal}
-              onAdd={addMochiItem}
-              addedFlash={mochiAddedFlash}
-            />
-          </div>
-        )}
-      </section>
-
-      {/* ── Order Summary ── */}
-      <section className="summary-grid">
-        <div className="section-card">
-          <div className="section-head"><h2>{t.orderSummary}</h2></div>
-
-          {orderItems.length === 0 ? (
-            <p className="empty-text">{t.emptyOrder}</p>
-          ) : (
-            <div className="order-list">
-              {orderItems.map((item) => (
-                <div className="order-item" key={item.id}>
-                  <div>
-                    <h4>{item.title}</h4>
-                    {item.extraLine && <p>{item.extraLine}</p>}
-                    {item.toppingLine && <p>{item.toppingLine}</p>}
-                    {item.sugarLine && <p>{item.sugarLine}</p>}
-                    <small>{t.qty}: {item.quantity}</small>
-                  </div>
-                  <div className="order-side">
-                    <strong>{formatPrice(item.subtotal)}</strong>
-                    {/* FIX: confirm before removing */}
-                    <button className="remove-button" onClick={() => removeOrderItem(item.id, item.title)}>
-                      {t.remove}
-                    </button>
-                  </div>
-                </div>
-              ))}
-              <div className="total-line">
-                <span>{t.total}</span>
-                <strong>{formatPrice(orderTotal)}</strong>
-              </div>
-            </div>
-          )}
-
-          {/* Payment Method */}
-          <div className="payment-card">
-            <h3>{t.paymentMethod}</h3>
-            <div className="payment-options">
-              <button
-                type="button"
-                className={`choice-button ${paymentMethod === "cash" ? "active" : ""}`}
-                onClick={() => setPaymentMethod("cash")}
-              >
-                {t.cashPayment}
-              </button>
-              <button
-                type="button"
-                className={`choice-button ${paymentMethod === "qr" ? "active" : ""}`}
-                onClick={() => setPaymentMethod("qr")}
-              >
-                {t.qrPayment}
-              </button>
-            </div>
-            {paymentMethod === "qr" && <p className="payment-note">{t.qrNote}</p>}
-          </div>
-
-          <p className="help-text">{t.reminder}</p>
-          <button
-            className="checkout-button"
-            onClick={handleWhatsAppCheckout}
-            disabled={pickupDetails.closed || noAvailableTime || orderItems.length === 0}
-          >
-            {t.orderNow}
-          </button>
-        </div>
-      </section>
-
-      {/* ── Footer ── */}
-      <footer className="site-footer">
-        <div className="footer-brand">
-          <img src="/logo.png" alt="JojoBakes Logo" className="footer-logo" />
-          <p>{t.footerTag}</p>
-        </div>
-        <div className="footer-links">
-          <a href={instagramUrl} target="_blank" rel="noreferrer">@jojo.bakess</a>
-          <a href={whatsappUrl} target="_blank" rel="noreferrer">{t.footerCta}</a>
-          <p>{t.footerHours}</p>
-        </div>
-        <div className="footer-note">
-          <p>{t.footerNote}</p>
-        </div>
-      </footer>
-    </div>
-  );
+    {customising && <div className="sheet-mask"><section className="option-sheet" role="dialog" aria-modal="true" aria-labelledby="option-title"><button className="sheet-close" type="button" aria-label="关闭" onClick={() => { setCustomising(null); setOptionWarning(''); }}>×</button><small>今晚点单纸 · 选好再确认</small><h2 id="option-title">{customising.name}</h2>{customising.kind === 'classic' && <OptionGroup title={customising.optionGroups[0].label} options={customising.optionGroups[0].choices} choices={choices} toggle={(item) => toggleChoice(item, customising.optionGroups[0].max)} min={customising.optionGroups[0].min} max={customising.optionGroups[0].max} />}{customising.kind === 'mochi' && <><OptionGroup title="先选麻薯方式" options={['内烤麻薯', '外夹麻薯']} choices={mochiStyle ? [mochiStyle] : []} toggle={(item) => { setMochiStyle(item); setOptionWarning(''); }} /><OptionGroup title="再选麻薯口味等级" options={mochiTiers} choices={mochiTier ? [mochiTier] : []} toggle={(tier) => { setMochiTier(tier); setChoices([]); setOptionWarning(''); }} formatOption={(tier) => tier.price ? `${tier.label} · RM${tier.price}` : tier.label} />{mochiTier && <OptionGroup title={mochiTier.count === 2 ? `选两种${mochiTier.label}` : `选一种${mochiTier.label}`} options={mochiTier.flavours} choices={choices} toggle={(item) => toggleChoice(item, mochiTier.count)} formatOption={(item) => mochiTier.prices ? `${item} · RM${mochiTier.prices[item]}` : item} />}</>}{customising.kind === 'drink' && <><OptionGroup title={customising.optionGroups[0].label} options={customising.optionGroups[0].choices} choices={drinkSweetness ? [drinkSweetness] : []} toggle={(item) => { setDrinkSweetness(item); setOptionWarning(''); }} /><OptionGroup title={customising.optionGroups[1].label} options={customising.optionGroups[1].choices} choices={drinkIce ? [drinkIce] : []} toggle={(item) => { setDrinkIce(item); setOptionWarning(''); }} />{customising.addOns?.map((addOn) => <OptionGroup key={addOn.id} title="加料（可选）" options={[addOn]} choices={drinkPearl ? [addOn] : []} toggle={() => setDrinkPearl((value) => value ? '' : addOn.id)} formatOption={(item) => `${item.label} +RM${item.price}`} />)}</>}{optionWarning && <p className="option-warning">{optionWarning}</p>}<button className="add-confirm" type="button" onClick={confirmOptions}>加入</button></section></div>}
+    {pendingItem && <div className="sheet-mask"><section className="confirmation-sheet" role="dialog" aria-modal="true" aria-labelledby="confirmation-title"><small>确认加入购物车</small><h2 id="confirmation-title">{pendingItem.product.name}</h2>{pendingItem.options.length > 0 && <div className="confirmation-options">{pendingItem.options.map((option) => <p key={option.label}><span>{option.label}</span><b>{option.value}</b></p>)}</div>}<div className="confirmation-quantity"><span>数量</span><div><button type="button" aria-label="减少数量" onClick={() => setPendingQuantity((value) => Math.max(1, value - 1))}>−</button><b>{pendingQuantity}</b><button type="button" aria-label="增加数量" onClick={() => setPendingQuantity((value) => value + 1)}>+</button></div></div><div className="confirmation-total"><span>总额</span><strong>{money(pendingItem.unitPrice * pendingQuantity)}</strong></div><div className="confirmation-actions"><button type="button" className="cancel-add" onClick={() => setPendingItem(null)}>取消</button><button type="button" className="confirm-add" onClick={confirmAdd}>确认加入</button></div></section></div>}
+  </main>;
 }
+
+function OptionGroup({ title, options, choices, toggle, formatOption = (option) => option, min, max }) { const choiceHint = min && max && min !== max ? `（可选 ${min} 至 ${max} 个）` : ''; return <div className="option-group"><label>{title}{choiceHint}</label><div>{options.map((option) => <button type="button" className={choices.includes(option) ? 'selected' : ''} onClick={() => toggle(option)} key={option.id || option}>{formatOption(option)}</button>)}</div></div>; }
+
+const styles = `
+@import url('https://fonts.googleapis.com/css2?family=DM+Sans:wght@500;600;700&family=Noto+Sans+SC:wght@400;500;600;700&family=Playfair+Display:ital,wght@0,500;0,600;1,500&display=swap');
+*{box-sizing:border-box}html{scroll-behavior:smooth}.shop{--ink:#3e271a;--brown:#6c3d27;--cream:#fff9ef;--paper:#fffdf9;--line:#ecdcca;--muted:#846b5a;min-height:100vh;background:var(--cream);color:var(--ink);font-family:'Noto Sans SC',sans-serif;padding-bottom:105px}.hero{height:490px;position:relative;overflow:hidden;padding:21px 20px;background:linear-gradient(140deg,#f5dfbc,#e4af74)}.hero:after{content:'';position:absolute;width:290px;height:290px;border:1px solid #fff8ec8a;border-radius:50%;right:-100px;top:75px}.hero-top{position:relative;z-index:2;display:flex;justify-content:space-between;font-size:11px;letter-spacing:.8px;color:#704125}.hero-top span:first-child{font:700 17px 'DM Sans';letter-spacing:1px}.hero-copy{position:relative;z-index:2;margin-top:85px}.hero-copy p,.section-heading small,.mochi-feature small,.option-sheet small{display:block;color:#a15e35;font-size:10px;font-weight:700;letter-spacing:1.35px}.hero-copy h1{margin:9px 0 23px;font:500 43px/1.13 'Playfair Display','Noto Sans SC',serif;letter-spacing:-1.7px}.hero-copy h1 em{font-style:italic;color:#a5542d}.hero-copy a{display:inline-flex;align-items:center;gap:11px;background:var(--ink);color:#fffaf2;padding:14px 18px;border-radius:999px;text-decoration:none;font-size:13px;font-weight:600}.hero-copy a b{font-size:17px}.hero-image{position:absolute;z-index:1;right:-62px;bottom:-20px;width:255px;height:335px;overflow:hidden;border-radius:145px 145px 0 0;transform:rotate(-7deg);box-shadow:0 18px 35px #72421f45}.hero-image img{width:100%;height:100%;object-fit:cover}.hero-image i{position:absolute;left:9px;bottom:42px;width:73px;height:73px;border-radius:50%;display:grid;place-items:center;background:#fff9ed;color:#75421f;text-align:center;font:600 11px/1.4 'Noto Sans SC';font-style:normal;transform:rotate(9deg)}.category-tabs{position:sticky;z-index:8;top:0;display:flex;gap:7px;overflow:auto;padding:11px 14px;background:#fff9eff4;border-bottom:1px solid var(--line);backdrop-filter:blur(10px);scrollbar-width:none}.category-tabs a{flex:none;padding:8px 12px;border:1px solid #e8d7c3;border-radius:999px;color:#704a33;text-decoration:none;font-size:12px;white-space:nowrap}.category-tabs a:first-child{background:var(--ink);border-color:var(--ink);color:white}.order-tip{display:flex;gap:9px;align-items:start;margin:15px 20px 0;padding:12px 13px;background:#fffdf8;border:1px solid var(--line);border-radius:13px;font-size:11px;line-height:1.55}.order-tip b{flex:none;color:#8c512e}.order-tip span{color:var(--muted)}.menu-section{padding:34px 20px 0;scroll-margin-top:58px}.section-heading{display:flex;justify-content:space-between;align-items:end;margin-bottom:15px}.section-heading h2{margin:4px 0 0;font:500 28px/1.15 'Playfair Display','Noto Sans SC',serif;letter-spacing:-1px}.section-heading>span{font:600 11px 'DM Sans';color:#926342}.card-grid{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:12px}.product-card{overflow:hidden;background:var(--paper);border:1px solid #efdfcd;border-radius:17px;box-shadow:0 8px 19px #6d3d1909}.product-photo{height:151px;position:relative;background:#ead0a5;overflow:hidden}.product-photo img{display:block;width:100%;height:100%;object-fit:cover}.product-photo span{position:absolute;top:8px;left:8px;padding:4px 7px;border-radius:99px;background:#fffaf0e8;color:#81502e;font-size:9px;font-weight:700}.product-info{padding:10px}.product-info h3{margin:0;font-size:13px;line-height:1.4}.product-info p{margin:4px 0 8px;color:var(--muted);font-size:10px;line-height:1.45;min-height:29px}.product-info>div{display:flex;align-items:center;justify-content:space-between;gap:5px}.product-info b{font:700 13px 'DM Sans'}.product-info button{min-height:31px;padding:0 9px;border:0;border-radius:9px;background:#f0dfca;color:#633d28;font:600 10px 'Noto Sans SC';cursor:pointer}.drink-list{display:grid;gap:10px}.drink-card{display:flex;min-height:105px}.drink-card .product-photo{width:95px;height:auto;flex:none;background:linear-gradient(140deg,#d8bc93,#b77a51)}.drink-card .product-info{display:flex;flex:1;flex-direction:column;justify-content:center}.drink-card .product-info p{min-height:auto;margin-bottom:6px}.image-fallback{display:grid;width:100%;height:100%;place-items:center;background:linear-gradient(135deg,#efd8af,#ad6c44);color:#fff6e6;font:700 32px 'Noto Sans SC'}.mochi-feature{display:grid;grid-template-columns:122px 1fr;gap:15px;align-items:center;margin:36px 20px 0;padding:11px;background:#563421;color:#fff9ef;border-radius:19px;overflow:hidden}.mochi-feature img{width:122px;height:158px;object-fit:cover;border-radius:11px}.mochi-feature small{color:#f0bd81}.mochi-feature h2{margin:5px 0;font:500 21px/1.22 'Playfair Display','Noto Sans SC',serif}.mochi-feature p{margin:0;color:#e6cbb6;font-size:10px;line-height:1.55}.mochi-feature button{margin-top:11px;border:0;background:none;padding:0;color:#fff8ed;font:600 11px 'Noto Sans SC';cursor:pointer}.footer-note{margin:34px 20px 0;padding:17px;border-top:1px solid var(--line);font-size:12px}.footer-note b{display:block}.footer-note span{display:block;margin-top:5px;color:var(--muted);font-size:11px}.cart-dock{position:fixed;z-index:10;left:12px;right:12px;bottom:max(12px,env(safe-area-inset-bottom));overflow:hidden;border-radius:18px;background:var(--ink);color:#fffaf0;box-shadow:0 13px 30px #3d20144d}.cart-bar{display:flex;align-items:center;width:100%;min-height:61px;padding:0 17px;border:0;background:none;color:inherit;font:600 14px 'Noto Sans SC';cursor:pointer}.cart-bar b{display:inline-grid;place-items:center;min-width:19px;height:19px;margin-left:5px;border-radius:50%;background:#d98e53;font-size:10px}.cart-bar strong{margin-left:auto;margin-right:18px;font:700 15px 'DM Sans'}.cart-bar i{font-style:normal;font-size:17px}.cart-panel{max-height:74vh;overflow:auto;padding:1px 17px max(15px,env(safe-area-inset-bottom));background:#fffaf2;color:var(--ink)}.empty-cart{margin:22px 0;color:var(--muted);font-size:13px}.cart-item{display:flex;justify-content:space-between;gap:10px;padding:12px 0;border-bottom:1px solid var(--line)}.cart-item h3{margin:0;font-size:13px}.cart-item p{margin:3px 0;color:var(--muted);font-size:10px}.cart-item b{font:600 12px 'DM Sans'}.quantity{display:flex;align-items:center;gap:9px}.quantity button{width:32px;height:32px;border:0;border-radius:9px;background:#f0dfca;color:#593720;font-size:19px;cursor:pointer}.quantity span{min-width:11px;text-align:center;font:600 13px 'DM Sans'}.pickup{padding:14px 0 3px}.pickup>div:first-child{display:flex;justify-content:space-between;gap:8px;align-items:baseline}.pickup>div:first-child b{font-size:13px}.pickup>div:first-child span{color:var(--muted);font-size:10px}.pickup-slots{display:flex;gap:7px;overflow:auto;margin-top:10px;padding-bottom:5px}.pickup-slots button{flex:none;min-height:34px;padding:0 10px;border:1px solid var(--line);border-radius:8px;background:white;color:var(--ink);font:600 11px 'DM Sans';cursor:pointer}.pickup-slots button.selected{background:var(--brown);border-color:var(--brown);color:white}.pickup p,.pickup em{display:block;margin:9px 0 0;color:var(--muted);font-size:11px}.pickup em{color:#a53d2f;font-style:normal}.checkout,.add-confirm{width:100%;min-height:49px;border:0;border-radius:10px;background:#573520;color:#fffaf1;font:600 13px 'Noto Sans SC';cursor:pointer}.checkout{display:flex;align-items:center;justify-content:space-between;margin-top:14px;padding:0 15px}.checkout span{font-family:'DM Sans'}.sheet-mask{position:fixed;z-index:20;inset:0;display:flex;align-items:end;background:#281609b9}.option-sheet{width:100%;max-height:91vh;overflow:auto;padding:26px 20px max(21px,env(safe-area-inset-bottom));border-radius:24px 24px 0 0;background:#fffaf2;position:relative}.option-sheet h2{margin:4px 0 20px;font:500 26px 'Playfair Display','Noto Sans SC',serif}.sheet-close{position:absolute;right:17px;top:15px;width:32px;height:32px;border:0;border-radius:50%;background:#f0dfca;color:var(--ink);font-size:22px;cursor:pointer}.option-group{margin:16px 0}.option-group label{display:block;margin-bottom:9px;color:var(--muted);font-size:12px}.option-group>div{display:flex;flex-wrap:wrap;gap:8px}.option-group button{min-height:38px;padding:0 12px;border:1px solid var(--line);border-radius:9px;background:white;color:var(--ink);font:500 12px 'Noto Sans SC';cursor:pointer}.option-group button.selected{background:var(--brown);border-color:var(--brown);color:#fff}.add-confirm{margin-top:6px}.add-confirm:disabled{background:#baa48f;cursor:not-allowed}@media(min-width:720px){.hero{height:545px;padding-left:max(45px,calc((100% - 1040px)/2));padding-right:max(45px,calc((100% - 1040px)/2))}.hero-copy{margin-top:105px}.hero-copy h1{font-size:57px}.hero-image{right:calc((100% - 930px)/2);width:335px;height:420px}.category-tabs{justify-content:center}.order-tip,.menu-section,.footer-note{max-width:1040px;margin-left:auto;margin-right:auto}.menu-section{padding-left:0;padding-right:0}.card-grid{grid-template-columns:repeat(3,1fr);gap:17px}.product-photo{height:200px}.mochi-feature{max-width:1040px;margin-left:auto;margin-right:auto;grid-template-columns:270px 1fr;padding:15px;gap:28px}.mochi-feature img{width:270px;height:210px}.mochi-feature h2{font-size:30px}.drink-list{grid-template-columns:repeat(2,1fr);gap:16px}.cart-dock{left:auto;right:25px;width:410px}.option-sheet{width:520px;margin:auto;border-radius:22px}.sheet-mask{align-items:center;padding:20px}}
+.series-card{grid-column:1/-1;display:grid;grid-template-columns:122px 1fr;gap:12px;overflow:hidden;padding:11px;border:1px solid #ead5bd;border-radius:18px;background:#fffdf9;box-shadow:0 8px 19px #6d3d1909}.series-photo{position:relative;min-height:164px;overflow:hidden;border-radius:12px;background:#ead0a5}.series-photo img{display:block;width:100%;height:100%;object-fit:cover}.series-photo span{position:absolute;top:8px;left:8px;padding:4px 7px;border-radius:99px;background:#fffaf0e8;color:#81502e;font-size:9px;font-weight:700}.series-content{min-width:0}.series-heading{display:flex;justify-content:space-between;gap:9px;align-items:start}.series-heading h3{margin:0;font-size:16px}.series-heading p{margin:4px 0 10px;color:var(--muted);font-size:10px;line-height:1.5}.series-heading>b{flex:none;color:#87502d;font:700 11px 'DM Sans'}.series-options{display:flex;flex-wrap:wrap;gap:6px}.series-options button{display:flex;align-items:center;gap:5px;min-height:31px;padding:0 8px;border:1px solid var(--line);border-radius:8px;background:white;color:var(--ink);font:500 10px 'Noto Sans SC';cursor:pointer}.series-options button b{font:600 10px 'DM Sans'}.series-options button.selected{border-color:var(--brown);background:#f5e5d1;color:var(--brown)}.series-action{display:flex;justify-content:space-between;align-items:center;margin-top:11px}.series-action strong{font:700 15px 'DM Sans'}.series-action button{min-height:37px;padding:0 13px;border:0;border-radius:9px;background:var(--brown);color:white;font:600 11px 'Noto Sans SC';cursor:pointer}@media(min-width:720px){.series-card{grid-column:span 2;grid-template-columns:180px 1fr}.series-photo{min-height:210px}}
+.option-warning{margin:0 0 10px;color:#a53d2f;font-size:12px;font-weight:600}.confirmation-sheet{width:100%;padding:25px 20px max(21px,env(safe-area-inset-bottom));border-radius:24px 24px 0 0;background:#fffaf2;color:var(--ink)}.confirmation-sheet>small{display:block;color:#a15e35;font-size:10px;font-weight:700;letter-spacing:1.2px}.confirmation-sheet h2{margin:5px 0 17px;font:500 26px 'Playfair Display','Noto Sans SC',serif}.confirmation-options{padding:11px 13px;border-radius:12px;background:#f6eadb}.confirmation-options p{display:flex;justify-content:space-between;gap:12px;margin:4px 0;font-size:12px}.confirmation-options span{color:var(--muted)}.confirmation-quantity,.confirmation-total{display:flex;align-items:center;justify-content:space-between;padding:17px 0;border-bottom:1px solid var(--line);font-size:13px}.confirmation-quantity>div{display:flex;align-items:center;gap:14px}.confirmation-quantity button{width:35px;height:35px;border:0;border-radius:10px;background:#f0dfca;color:#593720;font-size:20px;cursor:pointer}.confirmation-quantity b{min-width:12px;text-align:center;font:600 14px 'DM Sans'}.confirmation-total{border-bottom:0}.confirmation-total span{color:var(--muted)}.confirmation-total strong{font:700 19px 'DM Sans'}.confirmation-actions{display:grid;grid-template-columns:1fr 1.45fr;gap:9px;margin-top:8px}.confirmation-actions button{min-height:50px;border-radius:10px;font:600 13px 'Noto Sans SC';cursor:pointer}.cancel-add{border:1px solid var(--line);background:white;color:var(--ink)}.confirm-add{border:0;background:#573520;color:#fffaf1}@media(min-width:720px){.confirmation-sheet{width:460px;margin:auto;border-radius:22px}.sheet-mask{align-items:center;padding:20px}}
+.feature-grid{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:12px}.feature-grid .series-card{grid-column:auto;grid-template-columns:1fr}.feature-grid .series-photo{min-height:145px}.feature-grid .product-card{min-width:0}.feature-grid .product-photo{height:145px}@media(min-width:720px){.feature-grid{grid-template-columns:repeat(3,minmax(0,1fr))}.feature-grid .series-card{grid-column:auto;grid-template-columns:1fr}.feature-grid .series-photo{min-height:180px}.feature-grid .product-photo{height:180px}}
+.series-selected{display:flex;align-items:center;gap:6px;margin:7px 0;color:var(--ink);font-size:11px}.series-selected span{padding:3px 6px;border-radius:99px;background:#f2e3d0;color:#8a5837;font-size:9px}.series-selected b{overflow:hidden;text-overflow:ellipsis;white-space:nowrap}.toggle-options{min-height:33px;padding:0 10px;border:1px solid var(--line);border-radius:8px;background:#fff;color:var(--brown);font:600 11px 'Noto Sans SC';cursor:pointer}.series-options{margin-top:9px}
+.series-card .series-photo{height:164px;min-height:0;align-self:start}.series-card .series-photo img{height:100%;object-fit:cover}@media(min-width:720px){.series-card .series-photo{height:210px}.feature-grid .series-photo{height:180px}}
+
+/* Night-market paper menu refresh */
+.shop{--ink:#432819;--brown:#61351f;--caramel:#b96b35;--cream:#fff6e7;--paper:#fffaf0;--line:#e8cfad;--muted:#7e604b;position:relative;isolation:isolate;padding-bottom:132px;background:radial-gradient(circle at 10% 8%,#fffdf5 0 4%,transparent 27%),radial-gradient(circle at 85% 18%,#f2c98773 0 3%,transparent 30%),linear-gradient(135deg,#fff8eb,#f7e4c6 62%,#f4d6ad);overflow:hidden}.shop::before{content:'';position:absolute;z-index:-1;inset:0;background:radial-gradient(ellipse at 50% 30%,#fff9e9b3,transparent 44%),repeating-linear-gradient(0deg,transparent 0 4px,#7b471005 5px 6px);pointer-events:none}.hero{height:524px;padding:20px;background:linear-gradient(142deg,#f9e8ca 0%,#ecbd7f 64%,#d89355);box-shadow:inset 0 -22px 30px #73411b12}.hero::before{content:'今晚有香味';position:absolute;right:28px;top:54px;color:#75421f9c;font:italic 13px 'Playfair Display','Noto Sans SC',serif;transform:rotate(6deg)}.hero-copy{margin-top:75px;width:min(64%,285px)}.hero-copy h1{margin:8px 0 10px;font-size:40px;line-height:1.17;letter-spacing:-1.2px}.hero-copy h1 em{color:#7a3f21}.hero-note{display:block;max-width:212px;margin-bottom:15px;color:#67442e;font-size:11px;line-height:1.6}.hero-copy a,.checkout,.add-confirm,.confirm-add{background:var(--ink);box-shadow:0 8px 15px #4b28182b}.hero-copy a:active,.checkout:active,.add-confirm:active,.confirm-add:active,.series-action button:active{background:var(--caramel);transform:translateY(1px)}.hero-image{right:-70px;bottom:-18px;width:250px;height:340px;border:7px solid #fff1d5;border-bottom:0;box-shadow:0 22px 39px #64371955}.hero-image i{left:4px;bottom:46px;width:78px;height:78px;border:2px dashed #b87846;background:#fff6e6;color:#65371e;font-weight:700}.hero-chips{display:flex;gap:7px;overflow-x:auto;padding:13px 20px 2px;scrollbar-width:none}.hero-chips span{flex:none;border:1px solid #e1bc90;border-radius:7px 12px 8px 11px;background:#fff9edc7;padding:7px 9px;color:#68452e;font-size:10px;font-weight:700;box-shadow:2px 3px 0 #a6693517}.category-tabs{gap:8px;padding:11px 14px;background:#fff8e9ee;border-color:#e4c79f}.category-tabs a{border-radius:5px 11px 7px 10px;border-color:#d9bd91;background:linear-gradient(135deg,#f6e3bf,#efd3a3);box-shadow:1px 2px 0 #9c5c2114;font-size:12px;font-weight:600}.category-tabs a:first-child{background:#492a19;color:#fff9ed;box-shadow:2px 3px 0 #9b60332b}.order-tip{margin-top:14px;border-radius:10px 15px 11px 13px;background:#fffdf5c9;box-shadow:0 8px 22px #6b3d1509}.feature-section{margin:28px 12px 0;padding:22px 8px 8px;border:1px solid #e8c38d;border-radius:20px 25px 17px 23px;background:linear-gradient(135deg,#f4d39e,#f9e8c9 64%,#f3d3a8);box-shadow:0 13px 25px #7d46161a}.feature-section .section-heading{padding:0 12px}.feature-section .section-heading>span{max-width:110px;text-align:right;font:600 10px/1.4 'Noto Sans SC';color:#86512f}.feature-grid{gap:10px;padding:0 4px}.feature-grid .product-card,.feature-grid .series-card{border-color:#e0b77d;background:#fffaf0;box-shadow:0 10px 18px #7d461716}.feature-grid .product-photo,.feature-grid .series-photo{height:158px!important;border-radius:12px}.product-card{border-radius:13px 18px 14px 17px;box-shadow:0 8px 18px #6d3d1910}.product-photo{height:166px}.product-photo span,.series-photo span{border-radius:5px 10px 6px 9px;background:#fff6e8ed;color:#75401f;box-shadow:1px 2px 0 #8f512126}.product-info{padding:11px 10px 12px}.product-info h3{font-weight:700}.product-info b{font-size:14px;color:#4c2b1a}.product-info button{border-radius:7px 10px 8px 9px;background:#f2d3a8;color:#5f331e;font-weight:700}.product-info button:active{background:#d99153;color:white}.drink-card{min-height:112px;border-radius:14px 20px 15px 18px}.drink-card .product-photo{width:103px}.drink-fallback{background:radial-gradient(circle at 33% 20%,#fff6df 0 6%,transparent 7%),linear-gradient(135deg,#a96e45,#70432e);font-size:34px}.footer-note{padding:21px 0 25px;border-top:1px dashed #c99c6b}.cart-dock{bottom:max(10px,env(safe-area-inset-bottom));border:1px solid #8d5331;border-radius:13px 18px 14px 16px;background:linear-gradient(135deg,#3e2316,#5a3420);box-shadow:0 14px 30px #3d20145e}.cart-bar{min-height:64px}.cart-bar::before{content:'今晚收银';position:absolute;right:18px;top:7px;color:#dbad78;font-size:8px;letter-spacing:1px}.cart-bar strong{margin-top:12px}.cart-panel{background:repeating-linear-gradient(0deg,#fffaf0 0 28px,#f8ecd9 29px);border-top:1px dashed #d0a16d}.empty-cart{padding:5px 0}.pickup>div:first-child span{font-weight:600}.checkout{min-height:53px;border-radius:8px 12px 9px 11px}.series-card{border-radius:15px 20px 16px 19px;background:#fffaf0;box-shadow:0 9px 19px #6d3d1912}.series-card .series-photo{height:168px!important;border-radius:11px}.series-selected span{border-radius:5px 10px 6px 9px}.toggle-options{width:100%;border-radius:7px 11px 8px 10px;border-style:dashed;background:#fff8e8}.series-options button{min-height:34px;border-radius:7px 10px 8px 9px}.series-options button.selected{background:var(--ink);border-color:var(--ink);color:#fff8ed}.series-action button{border-radius:8px 11px 9px 10px}.option-sheet,.confirmation-sheet{background:repeating-linear-gradient(0deg,#fffaf0 0 29px,#f9ecd8 30px);border:1px solid #e5c391;box-shadow:0 -9px 26px #2512083b}.option-sheet::before,.confirmation-sheet::before{content:'JOJO BAKES · 今晚点单';display:block;margin-bottom:10px;color:#a56637;font:700 9px 'DM Sans','Noto Sans SC';letter-spacing:1.4px}.option-group label{font-weight:700;color:#6d452f}.option-group button{min-height:42px;border-radius:7px 11px 8px 10px}.option-group button.selected{background:var(--ink);border-color:var(--ink);color:#fffaf0}.add-confirm{min-height:54px;border-radius:8px 12px 9px 11px}.confirmation-options{background:#f4dfbd}.sheet-close{background:#efd4ab}.option-warning{padding:9px 11px;border-radius:8px;background:#fff0dc;color:#a1432d}
+@media(min-width:720px){.hero-copy{width:480px}.hero-copy h1{font-size:57px}.hero-note{max-width:330px;font-size:13px}.hero-chips{max-width:1040px;margin:auto;padding-left:0;padding-right:0}.feature-section{max-width:1040px;margin-left:auto;margin-right:auto;padding:26px 16px 16px}.feature-grid .product-photo,.feature-grid .series-photo{height:190px!important}.series-card .series-photo{height:210px!important}}
+.hero{background:linear-gradient(90deg,#fff0d4f2 0%,#f7d6a999 49%,#4b2b1975 100%),url('/assets/products/jojo-waffle-hero-drinks.jpg') center/cover}.hero::before,.hero:after{display:none}.hero-copy h1{margin:10px 0 13px;font-size:46px;line-height:1.08}.hero-copy h1 strong{font-weight:700}.hero-copy h1 em{font-family:'Playfair Display','Noto Sans SC',serif}.hero-feature{display:inline-flex;margin:0 0 17px;padding:7px 10px;border:1px solid #f7ddb1;background:#fff8e5d9;color:#5f3420;font:700 11px/1 'DM Sans','Noto Sans SC',sans-serif;letter-spacing:.25px}.brand-logo{display:block;width:auto;height:84px;object-fit:contain;filter:drop-shadow(0 3px 7px #4f2e1f2e)}.cart-bar::before{content:none}.checkout:disabled,.product-info button:disabled,.series-action button:disabled{cursor:not-allowed;opacity:.55}@media(min-width:720px){.hero-copy h1{font-size:68px}.hero-feature{font-size:13px;padding:8px 12px}}
+`;

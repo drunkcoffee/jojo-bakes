@@ -384,6 +384,14 @@ function getPickupDetails(dateStr, lang) {
   return { dayIndex, dayLabel, locationLabel, closed };
 }
 
+function formatOrderCreatedAt() {
+  return new Intl.DateTimeFormat("en-MY", {
+    dateStyle: "medium",
+    timeStyle: "short",
+    hour12: false,
+  }).format(new Date());
+}
+
 function buildOrderMessage({ lang, items, pickupDate, pickupTime, pickupDay, pickupLocation, paymentMethod }) {
   const t = translations[lang];
   const lines = [];
@@ -393,6 +401,7 @@ function buildOrderMessage({ lang, items, pickupDate, pickupTime, pickupDay, pic
   lines.push(`${t.day}: ${pickupDay}`);
   lines.push(`${t.location}: ${pickupLocation}`);
   lines.push(`${t.time}: ${pickupTime}`);
+  lines.push(`Order created: ${formatOrderCreatedAt()}`);
   lines.push("");
   lines.push(lang === "zh" ? "订单内容：" : "Order Items:");
   items.forEach((item, index) => {
@@ -404,9 +413,10 @@ function buildOrderMessage({ lang, items, pickupDate, pickupTime, pickupDay, pic
     lines.push(`   ${t.subtotal}: ${formatPrice(item.subtotal)}`);
   });
   const total = items.reduce((sum, item) => sum + item.subtotal, 0);
+  const totalQuantity = items.reduce((sum, item) => sum + item.quantity, 0);
   lines.push("");
-  // FIX: paymentMethod is now correctly included
-  lines.push(`${t.paymentMethod}: ${paymentMethod === "qr" ? t.qrPayment : t.cashPayment}`);
+  lines.push(`${t.paymentMethod}: ${paymentMethod === "qr" ? "QR" : "Cash"}`);
+  lines.push(`Total quantity: ${totalQuantity}`);
   lines.push(`${t.total}: ${formatPrice(total)}`);
   lines.push("");
   lines.push(t.reminder);
@@ -667,8 +677,8 @@ export default function App() {
         </div>
 
         <div className="hero-copy">
-          <p className="eyebrow">{t.subtitle}</p>
-          <p className="hero-text">{t.heroText}</p>
+          <h1 className="hero-title">Fresh waffle, made tonight.</h1>
+          <p className="hero-text">想吃 waffle，就找 Jojo.</p>
           <div className="hero-actions">
             <a href="#menu-gallery" className="primary-link">{t.viewMenu}</a>
             <a href="#order-section" className="secondary-link">{t.orderNowTop}</a>

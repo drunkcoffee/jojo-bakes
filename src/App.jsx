@@ -244,7 +244,6 @@ const mochiTiers = [
     count: 1,
     flavours: [
       { id: 'taro-chicken-floss', name: flavours.taroChickenFloss, price: 12 },
-      { id: 'chicken-floss-taro-mochi', name: flavours.chickenFlossTaro, price: 12 },
       { id: 'pistachio', name: flavours.pistachio, price: 13 },
       { id: 'pistachio-chocolate-kunafa', name: flavours.pistachioChocolateKunafa, price: 15 },
       { id: 'pistachio-kunafa', name: flavours.pistachioKunafa, price: 16 },

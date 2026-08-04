@@ -342,7 +342,7 @@ function ProductImage({ product, lang, className = '' }) {
 function ProductCard({ product, onAdd, lang }) {
   const t = translations[lang];
   return <article id={product.category === 'mochi' ? 'mochi' : undefined} className={`product-card ${product.type === 'drink' ? 'drink-card' : ''}`}>
-    <div className="product-photo"><ProductImage product={product} lang={lang} /><span>{product.available === false ? t.soldOutToday : text(product.badge, lang) || (product.type === 'drink' ? t.madeDrink : t.madeFresh)}</span></div>
+    <div className="product-photo"><ProductImage product={product} lang={lang} />{product.type !== 'drink' && <span>{product.available === false ? t.soldOutToday : text(product.badge, lang) || t.madeFresh}</span>}</div>
     <div className="product-info"><h3>{text(product.name, lang)}</h3><p>{text(product.description, lang)}</p>{product.type === 'drink' && <small className="drink-addon-label" style={{ display: 'block', margin: '-2px 0 8px', color: '#8a5837', fontSize: '10px', fontWeight: 700 }}>{drinkAddOns.map((addOn) => text(addOn.menuLabel, lang)).join(' · ')}</small>}<div><b>{money(product.price)}</b><button type="button" aria-label={`${t.add} ${text(product.name, lang)}`} disabled={product.available === false} onClick={() => onAdd(product)}>{product.available === false ? t.soldOutToday : t.add}</button></div></div>
   </article>;
 }

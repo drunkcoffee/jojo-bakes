@@ -251,6 +251,10 @@ const mochiTiers = [
   },
 ];
 
+const drinkAddOns = [
+  { id: 'bean-curd', name: { zh: '豆花 (+RM1)', en: 'Taufuhua (+RM1)' }, menuLabel: { zh: '+ 豆花 +RM1', en: '+ Taufuhua +RM1' }, price: 1 },
+];
+
 const drinkSettings = [
   {
     id: 'sweetness',
@@ -270,6 +274,13 @@ const drinkSettings = [
       { id: 'less-ice', name: { zh: '少冰', en: 'Less Ice' } },
     ],
     min: 1,
+    max: 1,
+  },
+  {
+    id: 'add-ons',
+    label: { zh: '加料（可选）', en: 'Add-ons (Optional)' },
+    choices: drinkAddOns,
+    min: 0,
     max: 1,
   },
 ];
@@ -332,7 +343,7 @@ function ProductCard({ product, onAdd, lang }) {
   const t = translations[lang];
   return <article id={product.category === 'mochi' ? 'mochi' : undefined} className={`product-card ${product.type === 'drink' ? 'drink-card' : ''}`}>
     <div className="product-photo"><ProductImage product={product} lang={lang} /><span>{product.available === false ? t.soldOutToday : text(product.badge, lang) || (product.type === 'drink' ? t.madeDrink : t.madeFresh)}</span></div>
-    <div className="product-info"><h3>{text(product.name, lang)}</h3><p>{text(product.description, lang)}</p><div><b>{money(product.price)}</b><button type="button" aria-label={`${t.add} ${text(product.name, lang)}`} disabled={product.available === false} onClick={() => onAdd(product)}>{product.available === false ? t.soldOutToday : t.add}</button></div></div>
+    <div className="product-info"><h3>{text(product.name, lang)}</h3><p>{text(product.description, lang)}</p>{product.type === 'drink' && <small className="drink-addon-label" style={{ display: 'block', margin: '-2px 0 8px', color: '#8a5837', fontSize: '10px', fontWeight: 700 }}>{drinkAddOns.map((addOn) => text(addOn.menuLabel, lang)).join(' · ')}</small>}<div><b>{money(product.price)}</b><button type="button" aria-label={`${t.add} ${text(product.name, lang)}`} disabled={product.available === false} onClick={() => onAdd(product)}>{product.available === false ? t.soldOutToday : t.add}</button></div></div>
   </article>;
 }
 
@@ -368,6 +379,7 @@ export default function App() {
   const [mochiTier, setMochiTier] = useState(null);
   const [drinkSweetness, setDrinkSweetness] = useState(null);
   const [drinkIce, setDrinkIce] = useState(null);
+  const [drinkAddOnChoices, setDrinkAddOnChoices] = useState([]);
   const [optionWarning, setOptionWarning] = useState('');
   const [pendingItem, setPendingItem] = useState(null);
   const [pendingQuantity, setPendingQuantity] = useState(1);
@@ -392,7 +404,7 @@ export default function App() {
   }, [toast]);
 
   function beginAdd(product) {
-    if (product.kind) { setCustomising(product); setChoices([]); setMochiStyle(null); setMochiTier(null); setDrinkSweetness(null); setDrinkIce(null); setOptionWarning(''); return; }
+    if (product.kind) { setCustomising(product); setChoices([]); setMochiStyle(null); setMochiTier(null); setDrinkSweetness(null); setDrinkIce(null); setDrinkAddOnChoices([]); setOptionWarning(''); return; }
     prepareItem(product, [], product.price);
   }
   function prepareItem(product, options, unitPrice) {
@@ -410,6 +422,7 @@ export default function App() {
     setToast(t.addedToCart);
   }
   function toggleChoice(flavour, maximum) { setOptionWarning(''); setChoices((current) => current.some((item) => item.id === flavour.id) ? current.filter((item) => item.id !== flavour.id) : current.length < maximum ? [...current, flavour] : current); }
+  function toggleDrinkAddOn(addOn, maximum) { setOptionWarning(''); setDrinkAddOnChoices((current) => current.some((item) => item.id === addOn.id) ? current.filter((item) => item.id !== addOn.id) : current.length < maximum ? [...current, addOn] : current); }
   function confirmOptions() {
     if (!customising) return;
     const classicOptions = customising.optionGroups?.[0];
@@ -422,7 +435,15 @@ export default function App() {
       const price = choices[0]?.price || mochiTier.price;
       prepareItem(customising, [{ groupId: 'style', valueId: mochiStyle.id, label: { zh: '方式', en: 'Style' }, value: mochiStyle.name }, { groupId: mochiTier.id, valueId: choices.map((choice) => choice.id).join('+'), label: { zh: '口味', en: 'Flavour' }, value: joinOptionNames(choices) }], price);
     }
-    if (customising.kind === 'drink') prepareItem(customising, [{ groupId: customising.optionGroups[0].id, valueId: drinkSweetness.id, label: customising.optionGroups[0].label, value: drinkSweetness.name }, { groupId: customising.optionGroups[1].id, valueId: drinkIce.id, label: customising.optionGroups[1].label, value: drinkIce.name }], customising.price);
+    if (customising.kind === 'drink') {
+      const addOnGroup = customising.optionGroups[2];
+      const addOnPrice = drinkAddOnChoices.reduce((sum, addOn) => sum + addOn.price, 0);
+      prepareItem(customising, [
+        { groupId: customising.optionGroups[0].id, valueId: drinkSweetness.id, label: customising.optionGroups[0].label, value: drinkSweetness.name },
+        { groupId: customising.optionGroups[1].id, valueId: drinkIce.id, label: customising.optionGroups[1].label, value: drinkIce.name },
+        ...drinkAddOnChoices.map((addOn) => ({ groupId: addOnGroup.id, valueId: addOn.id, label: addOnGroup.label, value: addOn.name })),
+      ], customising.price + addOnPrice);
+    }
     setCustomising(null);
   }
   function confirmAdd() {
@@ -459,7 +480,7 @@ export default function App() {
     <aside className={`cart-dock ${cartOpen ? 'open' : ''}`} aria-label={t.cart}><button className="cart-bar" type="button" onClick={() => setCartOpen((open) => !open)}><span>🛒 {t.cart}<b>{quantity}</b></span><strong>{quantity ? money(total) : t.tonightQuestion}</strong><i>{cartOpen ? '⌄' : '⌃'}</i></button>{cartOpen && <div className="cart-panel">{cart.length === 0 ? <p className="empty-cart">{t.emptyCart}</p> : <><div className="cart-items">{cart.map((item) => <article className="cart-item" key={item.key}><div><h3>{text(item.product.name, lang)}</h3>{item.options.map((option) => <p key={`${option.groupId}-${option.valueId}`}>{text(option.label, lang)}: {text(option.value, lang)}</p>)}<b>{money(item.unitPrice)}</b></div><div className="quantity"><button type="button" aria-label={t.decreaseQuantity} onClick={() => updateQuantity(item.key, -1)}>−</button><span>{item.quantity}</span><button type="button" aria-label={t.increaseQuantity} onClick={() => updateQuantity(item.key, 1)}>+</button></div></article>)}</div><div className="pickup"><div><b>{t.selectPickupTime}</b><span>{t.todayEvery}</span></div>{pickupSlots.length ? <div className="pickup-slots">{pickupSlots.map((slot) => <button type="button" className={pickupTime === slot.label ? 'selected' : ''} key={slot.value} onClick={() => { setPickupTime(slot.label); setPickupWarning(false); }}>{slot.label}</button>)}</div> : <p>{t.closedToday}</p>}{pickupWarning && <em>{t.pickupRequired}</em>}</div><div className="payment"><b>{t.paymentMethod}</b><div><button type="button" className={paymentMethod === 'cash' ? 'selected' : ''} onClick={() => setPaymentMethod('cash')}>{t.cash}</button><button type="button" className={paymentMethod === 'qr' ? 'selected' : ''} onClick={() => setPaymentMethod('qr')}>{t.qr}</button></div></div><div className="cart-totals"><span>{t.totalQuantity}: {quantity}</span><strong>{t.total}: {money(total)}</strong></div><button className="checkout" type="button" disabled={!pickupSlots.length} onClick={checkout}>{t.sendWhatsapp} <span>{money(total)}</span></button></>}</div>}</aside>
 
     {toast && <div className="toast" role="status">{toast}</div>}
-    {customising && <div className="sheet-mask"><section className="option-sheet" role="dialog" aria-modal="true" aria-labelledby="option-title"><button className="sheet-close" type="button" aria-label={t.close} onClick={() => { setCustomising(null); setOptionWarning(''); }}>×</button><small>{t.tonightOrder}</small><h2 id="option-title">{text(customising.name, lang)}</h2>{customising.kind === 'classic' && <OptionGroup title={customising.optionGroups[0].label} options={customising.optionGroups[0].choices} choices={choices} toggle={(item) => toggleChoice(item, customising.optionGroups[0].max)} min={customising.optionGroups[0].min} max={customising.optionGroups[0].max} lang={lang} t={t} />}{customising.kind === 'mochi' && <><OptionGroup title={t.chooseMochiStyle} options={[{ id: 'inside-mochi', name: { zh: '内烤麻薯', en: 'Baked-in Mochi' } }, { id: 'outside-mochi', name: { zh: '外夹麻薯', en: 'Outside Mochi' } }]} choices={mochiStyle ? [mochiStyle] : []} toggle={(item) => { setMochiStyle(item); setOptionWarning(''); }} lang={lang} t={t} /><OptionGroup title={t.chooseMochiTier} options={mochiTiers} choices={mochiTier ? [mochiTier] : []} toggle={(tier) => { setMochiTier(tier); setChoices([]); setOptionWarning(''); }} formatOption={(tier) => tier.price ? `${text(tier.label, lang)} · ${money(tier.price)}` : text(tier.label, lang)} lang={lang} t={t} />{mochiTier && <OptionGroup title={mochiTier.count === 2 ? t.chooseTwo(text(mochiTier.label, lang)) : t.chooseOne(text(mochiTier.label, lang))} options={mochiTier.flavours} choices={choices} toggle={(item) => toggleChoice(item, mochiTier.count)} formatOption={(item) => item.price ? `${text(item.name, lang)} · ${money(item.price)}` : text(item.name, lang)} lang={lang} t={t} />}</>}{customising.kind === 'drink' && <><OptionGroup title={customising.optionGroups[0].label} options={customising.optionGroups[0].choices} choices={drinkSweetness ? [drinkSweetness] : []} toggle={(item) => { setDrinkSweetness(item); setOptionWarning(''); }} lang={lang} t={t} /><OptionGroup title={customising.optionGroups[1].label} options={customising.optionGroups[1].choices} choices={drinkIce ? [drinkIce] : []} toggle={(item) => { setDrinkIce(item); setOptionWarning(''); }} lang={lang} t={t} /></>}{optionWarning && <p className="option-warning">{optionWarning}</p>}<button className="add-confirm" type="button" onClick={confirmOptions}>{t.addToCart}</button></section></div>}
+    {customising && <div className="sheet-mask"><section className="option-sheet" role="dialog" aria-modal="true" aria-labelledby="option-title"><button className="sheet-close" type="button" aria-label={t.close} onClick={() => { setCustomising(null); setOptionWarning(''); }}>×</button><small>{t.tonightOrder}</small><h2 id="option-title">{text(customising.name, lang)}</h2>{customising.kind === 'classic' && <OptionGroup title={customising.optionGroups[0].label} options={customising.optionGroups[0].choices} choices={choices} toggle={(item) => toggleChoice(item, customising.optionGroups[0].max)} min={customising.optionGroups[0].min} max={customising.optionGroups[0].max} lang={lang} t={t} />}{customising.kind === 'mochi' && <><OptionGroup title={t.chooseMochiStyle} options={[{ id: 'inside-mochi', name: { zh: '内烤麻薯', en: 'Baked-in Mochi' } }, { id: 'outside-mochi', name: { zh: '外夹麻薯', en: 'Outside Mochi' } }]} choices={mochiStyle ? [mochiStyle] : []} toggle={(item) => { setMochiStyle(item); setOptionWarning(''); }} lang={lang} t={t} /><OptionGroup title={t.chooseMochiTier} options={mochiTiers} choices={mochiTier ? [mochiTier] : []} toggle={(tier) => { setMochiTier(tier); setChoices([]); setOptionWarning(''); }} formatOption={(tier) => tier.price ? `${text(tier.label, lang)} · ${money(tier.price)}` : text(tier.label, lang)} lang={lang} t={t} />{mochiTier && <OptionGroup title={mochiTier.count === 2 ? t.chooseTwo(text(mochiTier.label, lang)) : t.chooseOne(text(mochiTier.label, lang))} options={mochiTier.flavours} choices={choices} toggle={(item) => toggleChoice(item, mochiTier.count)} formatOption={(item) => item.price ? `${text(item.name, lang)} · ${money(item.price)}` : text(item.name, lang)} lang={lang} t={t} />}</>}{customising.kind === 'drink' && <><OptionGroup title={customising.optionGroups[0].label} options={customising.optionGroups[0].choices} choices={drinkSweetness ? [drinkSweetness] : []} toggle={(item) => { setDrinkSweetness(item); setOptionWarning(''); }} lang={lang} t={t} /><OptionGroup title={customising.optionGroups[1].label} options={customising.optionGroups[1].choices} choices={drinkIce ? [drinkIce] : []} toggle={(item) => { setDrinkIce(item); setOptionWarning(''); }} lang={lang} t={t} /><OptionGroup title={customising.optionGroups[2].label} options={customising.optionGroups[2].choices} choices={drinkAddOnChoices} toggle={(item) => toggleDrinkAddOn(item, customising.optionGroups[2].max)} formatOption={(item) => `+ ${text(item.name, lang).replace(' (+RM1)', '')} +RM${item.price}`} lang={lang} t={t} /></>}{optionWarning && <p className="option-warning">{optionWarning}</p>}<button className="add-confirm" type="button" onClick={confirmOptions}>{t.addToCart}</button></section></div>}
     {pendingItem && <div className="sheet-mask"><section className="confirmation-sheet" role="dialog" aria-modal="true" aria-labelledby="confirmation-title"><small>{t.confirmAddTitle}</small><h2 id="confirmation-title">{text(pendingItem.product.name, lang)}</h2>{pendingItem.options.length > 0 && <div className="confirmation-options">{pendingItem.options.map((option) => <p key={`${option.groupId}-${option.valueId}`}><span>{text(option.label, lang)}</span><b>{text(option.value, lang)}</b></p>)}</div>}<div className="confirmation-quantity"><span>{t.quantity}</span><div><button type="button" aria-label={t.decreaseQuantity} onClick={() => setPendingQuantity((value) => Math.max(1, value - 1))}>−</button><b>{pendingQuantity}</b><button type="button" aria-label={t.increaseQuantity} onClick={() => setPendingQuantity((value) => value + 1)}>+</button></div></div><div className="confirmation-total"><span>{t.total}</span><strong>{money(pendingItem.unitPrice * pendingQuantity)}</strong></div><div className="confirmation-actions"><button type="button" className="cancel-add" onClick={() => setPendingItem(null)}>{t.cancel}</button><button type="button" className="confirm-add" onClick={confirmAdd}>{t.confirmAdd}</button></div></section></div>}
   </main>;
 }

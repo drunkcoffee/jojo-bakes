@@ -310,7 +310,7 @@ const drinks = [
   ['matcha-choco', { zh: '抹茶可可', en: 'Matcha Cocoa' }, 10, { zh: '抹茶加可可，比较浓。', en: 'Matcha with cocoa, richer taste.' }, 'drink-matcha-choco.jpg'],
   ['strawberry-matcha', { zh: '草莓抹茶', en: 'Strawberry Matcha' }, 10, { zh: '草莓酸甜。', en: 'Sweet and tangy strawberry matcha.' }, 'drink-strawberry-matcha.jpg'],
   ['jasmine-matcha', { zh: '茉莉抹茶', en: 'Jasmine Matcha' }, 10, { zh: '淡淡花香。', en: 'Light jasmine aroma.' }, 'drink-jasmine-matcha.jpg'],
-  ['thai-milk-tea', { zh: '泰式奶茶', en: 'Thai Milk Tea' }, 7, { zh: '甜香奶茶，喝起来顺。', en: 'Sweet, creamy Thai milk tea.' }, 'drink-thai-milk-tea.jpg'],
+  ['thai-milk-tea', { zh: '泰式奶茶', en: 'Thai Milk Tea' }, 7, { zh: '甜香奶茶，喝起来顺。', en: 'Sweet, creamy Thai milk tea.' }, 'drink-thai-milk-tea.png'],
   ['cocoa', { zh: '可可', en: 'Cocoa' }, 6, { zh: '小朋友也会喜欢。', en: 'Easy cocoa, kid-friendly.' }, 'drink-cocoa.jpg'],
   ['strawberry-cocoa', { zh: '草莓可可', en: 'Strawberry Cocoa' }, 8, { zh: '草莓配可可。', en: 'Strawberry with cocoa.' }, 'drink-strawberry-cocoa.jpg'],
 ].map(([id, name, price, description, image]) => ({

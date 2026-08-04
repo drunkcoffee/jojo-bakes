@@ -286,6 +286,10 @@ const drinkSettings = [
 ];
 
 const products = [
+  { id: 'gula-melaka', category: 'special', name: { zh: 'Gula Melaka', en: 'Gula Melaka' }, price: 10, badge: { zh: '椰糖', en: 'Palm Sugar' }, description: { zh: '椰香椰糖，甜甜刚刚好。', en: 'Palm sugar with a gentle coconut sweetness.' }, image: photo('waffle-gula-melaka.jpeg') },
+  { id: 'milo-dinosourr', category: 'special', name: { zh: 'Milo Dinosourr', en: 'Milo Dinosourr' }, price: 9, badge: { zh: 'Milo', en: 'Milo' }, description: { zh: '浓浓 Milo，巧克力控会喜欢。', en: 'Rich Milo for chocolate lovers.' }, image: photo('waffle-milo-dinosourr.jpeg') },
+  { id: 'nutella-choco-kunafa', category: 'special', name: { zh: 'Nutella Choco Kunafa', en: 'Nutella Choco Kunafa' }, price: 11, badge: { zh: '浓巧克力', en: 'Chocolate' }, description: { zh: 'Nutella 巧克力配 Kunafa，层次更丰富。', en: 'Nutella chocolate with crunchy kunafa.' }, image: photo('waffle-nutella-choco-kunafa.jpeg') },
+  { id: 'matcha-choco-kunafa', category: 'special', name: { zh: 'Matcha Choco Kunafa', en: 'Matcha Choco Kunafa' }, price: 11, badge: { zh: '抹茶巧克力', en: 'Matcha Choco' }, description: { zh: '抹茶巧克力配 Kunafa，浓郁又香脆。', en: 'Matcha chocolate with crunchy kunafa.' }, image: photo('waffle-matcha-choco-kunafa.jpeg') },
   { id: 'classic', category: 'classic', name: { zh: '经典口味', en: 'Classic Waffle' }, price: 5, badge: { zh: '经典', en: 'Classic' }, description: { zh: '可选一或两种喜欢的口味', en: 'Choose one or two favourite flavours.' }, image: photo('waffle-classic.webp'), kind: 'classic', available: true, optionGroups: [{ id: 'flavour', label: { zh: '选择口味', en: 'Choose Flavour' }, choices: classicFlavours, min: 1, max: 2 }] },
   { id: 'matcha-pairing', category: 'matcha', name: { zh: '抹茶酱搭配', en: 'Matcha Series' }, price: 8, badge: { zh: '抹茶酱', en: 'Matcha Sauce' }, description: { zh: '抹茶酱配喜欢的口味。', en: 'Matcha sauce paired with your favourite flavour.' }, image: photo('waffle-matcha-chocolate.webp'), kind: 'matcha-series' },
   { id: 'matcha-chocolate', category: 'special', name: { zh: '抹茶巧克力', en: 'Matcha Chocolate' }, price: 9, badge: { zh: '推荐', en: 'Recommended' }, description: { zh: '不用选择，直接点就好。', en: 'Ready flavour, no extra choices needed.' }, image: photo('waffle-matcha-chocolate.webp') },
@@ -295,8 +299,6 @@ const products = [
   { id: 'taro-waffle', category: 'special', name: { zh: '芋泥 Waffle', en: 'Taro Waffle' }, price: 8, badge: { zh: '芋泥', en: 'Taro' }, description: { zh: '芋泥比较温柔，不会太腻。', en: 'Soft taro flavour, not too heavy.' }, image: photo('waffle-taro.webp') },
   { id: 'mayo-floss', category: 'special', name: { zh: 'Mayo 鸡肉松', en: 'Mayo Chicken Floss' }, price: 8, badge: { zh: '咸甜', en: 'Sweet Savoury' }, description: { zh: '咸甜口，越吃越顺。', en: 'Sweet and savoury in one bite.' }, image: photo('waffle-mayo-chicken-floss.webp') },
   { id: 'floss-taro', category: 'special', name: { zh: '鸡肉松芋泥', en: 'Chicken Floss Taro' }, price: 10, badge: { zh: '人气', en: 'Popular' }, description: { zh: '咸香鸡肉松配芋泥。', en: 'Savoury chicken floss with taro.' }, image: photo('waffle-chicken-floss-taro.webp') },
-  { id: 'chocolate-coffee', category: 'special', name: { zh: '巧克力咖啡', en: 'Chocolate Coffee' }, price: 6, badge: { zh: '咖啡香', en: 'Coffee' }, description: { zh: '巧克力配咖啡香。', en: 'Chocolate with a coffee finish.' }, image: photo('waffle-peanut-coffee.webp') },
-  { id: 'peanut-coffee', category: 'special', name: { zh: '花生咖啡', en: 'Peanut Coffee' }, price: 6, badge: { zh: '咖啡香', en: 'Coffee' }, description: { zh: '花生配咖啡香。', en: 'Peanut with a coffee finish.' }, image: photo('waffle-peanut-coffee.webp') },
   { id: 'kunafa', category: 'kunafa', name: { zh: '开心果 Kunafa 系列', en: 'Pistachio Kunafa Series' }, price: 11, badge: { zh: '浓一点', en: 'Rich' }, description: { zh: '酥脆 Kunafa 搭配开心果酱，适合喜欢浓一点口味的。', en: 'Crispy kunafa with pistachio sauce.' }, image: photo('waffle-pistachio-kunafa.webp'), kind: 'kunafa' },
   { id: 'oreo', category: 'cookies', name: { zh: 'Oreo 系列', en: 'Oreo Series' }, price: 7, badge: { zh: 'Oreo 饼干碎', en: 'Oreo Crumbs' }, description: { zh: '每份都有 Oreo 饼干碎，选一种口味。', en: 'Comes with Oreo crumbs. Choose one flavour.' }, image: photo('waffle-chocolate-oreo.jpg'), kind: 'cookie-series' },
   { id: 'lotus', category: 'cookies', name: { zh: 'Lotus 系列', en: 'Lotus Series' }, price: 7, badge: { zh: 'Lotus 碎', en: 'Lotus Crumbs' }, description: { zh: '每份都有 Lotus 碎，选一种口味。', en: 'Comes with Lotus crumbs. Choose one flavour.' }, image: photo('waffle-matcha-lotus.jpg'), kind: 'cookie-series' },
@@ -342,7 +344,7 @@ function ProductImage({ product, lang, className = '' }) {
 function ProductCard({ product, onAdd, lang }) {
   const t = translations[lang];
   return <article id={product.category === 'mochi' ? 'mochi' : undefined} className={`product-card ${product.type === 'drink' ? 'drink-card' : ''}`}>
-    <div className="product-photo"><ProductImage product={product} lang={lang} />{product.type !== 'drink' && <span>{product.available === false ? t.soldOutToday : text(product.badge, lang) || t.madeFresh}</span>}</div>
+    <div className="product-photo"><ProductImage product={product} lang={lang} /></div>
     <div className="product-info"><h3>{text(product.name, lang)}</h3><p>{text(product.description, lang)}</p>{product.type === 'drink' && <small className="drink-addon-label" style={{ display: 'block', margin: '-2px 0 8px', color: '#8a5837', fontSize: '10px', fontWeight: 700 }}>{drinkAddOns.map((addOn) => text(addOn.menuLabel, lang)).join(' · ')}</small>}<div><b>{money(product.price)}</b><button type="button" aria-label={`${t.add} ${text(product.name, lang)}`} disabled={product.available === false} onClick={() => onAdd(product)}>{product.available === false ? t.soldOutToday : t.add}</button></div></div>
   </article>;
 }
@@ -354,7 +356,7 @@ function SeriesCard({ product, options, onAdd, lang, title = product.name, serie
   const [hasSelected, setHasSelected] = useState(false);
   const selected = options.find((option) => option.id === selectedId) || options[0];
   return <article className={`series-card ${className}`}>
-    <div className="series-photo"><ProductImage product={product} lang={lang} /><span>{product.available === false ? t.soldOutToday : text(product.badge, lang)}</span></div>
+    <div className="series-photo"><ProductImage product={product} lang={lang} /></div>
     <div className="series-content"><div className="series-heading"><div><h3>{text(title, lang)}</h3><p>{text(product.description, lang)}</p></div>{showStartingPrice && <b>RM{Math.min(...options.map((option) => option.price))} {t.from}</b>}</div><div className="series-selected"><span>{hasSelected ? t.selected : t.chooseFirst}</span><b>{text(selected.name, lang)}</b></div><button type="button" className="toggle-options" onClick={() => setExpanded((value) => !value)}>{expanded ? t.collapseOptions : hasSelected ? t.expandOptions : t.chooseFlavour}</button>{expanded && <div className="series-options">{options.map((option) => <button type="button" className={selected.id === option.id ? 'selected' : ''} key={option.id} onClick={() => { setSelectedId(option.id); setHasSelected(true); setExpanded(false); }}><span>{text(option.name, lang)}</span><b>{money(option.price)}</b></button>)}</div>}<div className="series-action"><strong>{money(selected.price)}</strong><button type="button" aria-label={`${t.add} ${text(title, lang)}`} disabled={product.available === false} onClick={() => onAdd(product, [...(seriesLabel ? [{ groupId: 'series', valueId: seriesLabel.id, label: seriesLabel.label, value: seriesLabel.name }] : []), { groupId: selected.groupId || 'flavour', valueId: selected.id, label: selected.label, value: selected.name }], selected.price)}>{product.available === false ? t.soldOutToday : t.add}</button></div></div>
   </article>;
 }
@@ -464,8 +466,8 @@ export default function App() {
   const section = (id, eyebrow, title, list, extra = null, renderCard = null) => <section className="menu-section" id={id} aria-labelledby={`${id}-title`}><div className="section-heading"><div><small>{eyebrow}</small><h2 id={`${id}-title`}>{title}</h2></div>{extra}</div><div className={id === 'drinks' ? 'drink-list' : 'card-grid'}>{list.map((product) => renderCard ? renderCard(product) : <ProductCard key={product.id} product={product} onAdd={beginAdd} lang={lang} />)}</div></section>;
   const specialItems = products.filter((product) => product.category === 'special');
 
-  return <main className="shop"><style>{styles}</style>
-    <section className="hero"><div className="hero-top"><img className="brand-logo" src={photo('logo-jojo-bakes.webp')} alt="JOJO BAKES" /><div className="language-toggle" aria-label="Language"><button type="button" className={lang === 'zh' ? 'active' : ''} onClick={() => setLang('zh')}>中文</button><span>|</span><button type="button" className={lang === 'en' ? 'active' : ''} onClick={() => setLang('en')}>EN</button></div></div><div className="hero-copy"><p>TONIGHT’S SPECIAL · MADE FRESH</p><h1><strong>Good things happen</strong><br /><em>after sunset.</em></h1><span className="hero-feature">Chocolate Matcha Waffle</span><a href="#classic">WhatsApp {lang === 'zh' ? '下单' : 'Order'} <b>→</b></a></div></section>
+  return <main className="shop"><style>{styles}</style><style>{mobileProductPhotoStyles}</style>
+    <section className="hero"><div className="hero-top"><img className="brand-logo" src={photo('logo-jojo-bakes.webp')} alt="JOJO BAKES" /><div className="language-toggle" aria-label="Language"><button type="button" className={lang === 'zh' ? 'active' : ''} onClick={() => setLang('zh')}>中文</button><span>|</span><button type="button" className={lang === 'en' ? 'active' : ''} onClick={() => setLang('en')}>EN</button></div></div><div className="hero-copy"><p>TONIGHT’S SPECIAL · MADE FRESH</p><h1><strong>Good things happen</strong><br /><em>after sunset.</em></h1><span className="hero-feature" style={{ background: 'rgba(255, 248, 229, 0.46)', borderColor: 'rgba(255, 248, 229, 0.62)', backdropFilter: 'blur(5px)' }}>chocolate·matcha·waffle</span><a href="#classic" style={{ marginLeft: '16px', padding: '15px 22px', borderRadius: '999px' }}>WhatsApp {lang === 'zh' ? '下单' : 'Order'} <b>→</b></a></div></section>
     <nav className="category-tabs" aria-label={t.menuAria}>{categories.map(([id, label]) => <a href={`#${id}`} key={id}>{text(label, lang)}</a>)}</nav>
     <div className="hero-chips"><span>🧇 {t.madeFresh}</span><span>⏱ {t.waitTime}</span><span>💳 {t.paymentChip}</span><span>📱 {t.whatsappConfirm}</span></div>
     <div className="order-tip"><b>{t.tipTitle}</b><span>{t.tipBody}</span></div>
@@ -489,6 +491,8 @@ function OptionGroup({ title, options, choices, toggle, formatOption, min, max, 
   const choiceHint = t.optionHint(min, max);
   return <div className="option-group"><label>{text(title, lang)}{choiceHint}</label><div>{options.map((option) => <button type="button" className={choices.some((choice) => choice.id === option.id) ? 'selected' : ''} onClick={() => toggle(option)} key={option.id}>{formatOption ? formatOption(option) : text(option.name || option.label, lang)}</button>)}</div></div>;
 }
+
+const mobileProductPhotoStyles = `@media(max-width:719px){.product-card:not(.drink-card) .product-photo{height:auto;aspect-ratio:4/5}}`;
 
 const styles = `
 @import url('https://fonts.googleapis.com/css2?family=DM+Sans:wght@500;600;700&family=Noto+Sans+SC:wght@400;500;600;700&family=Playfair+Display:ital,wght@0,500;0,600;1,500&display=swap');

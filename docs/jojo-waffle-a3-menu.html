@@ -1,0 +1,367 @@
+<!doctype html>
+<html lang="zh-Hans">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>JOJO Waffle A3 Menu</title>
+  <style>
+    @page { size: A3 portrait; margin: 0; }
+    * { box-sizing: border-box; }
+    :root {
+      --ink: #3f281b;
+      --brown: #6f4229;
+      --caramel: #b96d38;
+      --cream: #fff7e8;
+      --paper: #fffdf6;
+      --soft: #f4dfbf;
+      --line: #dfc297;
+      --muted: #80604b;
+    }
+    html, body { margin: 0; min-height: 100%; background: #e9d7bc; }
+    body {
+      display: grid;
+      place-items: center;
+      color: var(--ink);
+      font-family: "Microsoft YaHei", "PingFang SC", "Noto Sans SC", Arial, sans-serif;
+    }
+    .sheet {
+      position: relative;
+      width: 297mm;
+      height: 420mm;
+      overflow: hidden;
+      padding: 10mm;
+      background:
+        radial-gradient(circle at 8% 5%, #fffdf4 0 38mm, transparent 72mm),
+        linear-gradient(135deg, #fff8ea 0%, #f6e0bc 62%, #efd0a1 100%);
+      box-shadow: 0 20px 70px rgba(49, 29, 15, .24);
+    }
+    .sheet::before {
+      content: "";
+      position: absolute;
+      inset: 0;
+      background: repeating-linear-gradient(0deg, transparent 0 5px, rgba(83, 48, 22, .035) 5px 6px);
+      pointer-events: none;
+    }
+    .content { position: relative; z-index: 1; height: 100%; display: grid; gap: 5mm; }
+    .hero {
+      display: grid;
+      grid-template-columns: 1.12fr .88fr;
+      gap: 6mm;
+      min-height: 60mm;
+      border: 1px solid rgba(108, 62, 30, .24);
+      background: linear-gradient(120deg, rgba(255, 250, 237, .96), rgba(244, 211, 162, .72));
+    }
+    .hero-copy { padding: 7mm 7mm 6mm; }
+    .topline { display: flex; align-items: center; gap: 3mm; margin-bottom: 5mm; }
+    .logo { width: 31mm; height: auto; object-fit: contain; filter: drop-shadow(0 2px 4px rgba(58, 36, 22, .18)); }
+    .brand-kicker { font-size: 8.5pt; font-weight: 800; letter-spacing: .12em; color: var(--caramel); text-transform: uppercase; }
+    h1 {
+      margin: 0;
+      font-family: Georgia, "Times New Roman", "Microsoft YaHei", serif;
+      font-size: 33pt;
+      line-height: .95;
+      letter-spacing: 0;
+      color: #432717;
+    }
+    .hero-sub { margin: 4mm 0 0; color: var(--muted); font-size: 10pt; line-height: 1.55; }
+    .chips { display: flex; flex-wrap: wrap; gap: 2mm; margin-top: 4.5mm; }
+    .chip {
+      display: inline-flex;
+      align-items: center;
+      min-height: 7.5mm;
+      padding: 0 3.4mm;
+      border: 1px solid var(--line);
+      background: rgba(255, 252, 244, .88);
+      color: #59341f;
+      font-size: 8.5pt;
+      font-weight: 800;
+    }
+    .chip.dark { border-color: #4b2a18; background: #4b2a18; color: #fff7e8; }
+    .hero-photo { position: relative; overflow: hidden; min-height: 60mm; }
+    .hero-photo img { width: 100%; height: 100%; object-fit: cover; display: block; }
+    .hero-photo::after {
+      content: "";
+      position: absolute;
+      inset: 0;
+      background: linear-gradient(90deg, rgba(255, 248, 231, .28), rgba(67, 36, 18, .18));
+    }
+    .section {
+      border: 1px solid rgba(128, 80, 42, .2);
+      background: rgba(255, 253, 246, .76);
+      padding: 4mm;
+    }
+    .section-head {
+      display: flex;
+      justify-content: space-between;
+      gap: 4mm;
+      align-items: end;
+      margin-bottom: 3mm;
+      border-bottom: 1px dashed rgba(129, 80, 42, .34);
+      padding-bottom: 2.5mm;
+    }
+    .eyebrow { display: block; margin-bottom: 1mm; color: var(--caramel); font-size: 7.5pt; font-weight: 900; letter-spacing: .14em; text-transform: uppercase; }
+    h2 { margin: 0; color: #422718; font-size: 18pt; line-height: 1.05; font-family: Georgia, "Times New Roman", "Microsoft YaHei", serif; font-weight: 700; }
+    .hint { color: var(--muted); font-size: 8.2pt; line-height: 1.45; text-align: right; }
+    .feature-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 3.2mm; }
+    .feature-card {
+      overflow: hidden;
+      min-height: 67mm;
+      border: 1px solid #e5cba5;
+      background: #fffaf0;
+      display: grid;
+      grid-template-rows: 27mm 1fr;
+    }
+    .feature-card img, .small-card img { width: 100%; height: 100%; object-fit: cover; display: block; }
+    .feature-body { padding: 3mm; }
+    .row { display: flex; justify-content: space-between; gap: 2.5mm; align-items: baseline; }
+    h3 { margin: 0; font-size: 11pt; line-height: 1.2; color: #432719; }
+    .price { flex: none; color: #3e2416; font: 900 11pt Arial, sans-serif; white-space: nowrap; }
+    p { margin: 1.7mm 0 0; color: var(--muted); font-size: 7.6pt; line-height: 1.42; }
+    .options { display: flex; flex-wrap: wrap; gap: 1.5mm; margin-top: 2.4mm; }
+    .pill { border: 1px solid #e5cba5; background: #fffef8; padding: 1.15mm 2mm; color: #66432c; font-size: 7pt; line-height: 1.1; font-weight: 700; }
+    .body-grid { display: grid; grid-template-columns: 1.06fr .94fr; gap: 5mm; min-height: 0; }
+    .col { display: grid; gap: 4mm; align-content: start; }
+    .classic-box {
+      display: grid;
+      grid-template-columns: 34mm 1fr;
+      gap: 3mm;
+      align-items: stretch;
+      border: 1px solid #e5cba5;
+      background: #fffaf0;
+      padding: 3mm;
+    }
+    .classic-box img { width: 100%; height: 31mm; object-fit: cover; }
+    .flavour-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 1.5mm; margin-top: 2mm; }
+    .flavour { background: #f6e4c9; border: 1px solid #e6cba1; padding: 1.4mm; text-align: center; color: #5f3a24; font-size: 7.5pt; font-weight: 800; }
+    .small-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 2.2mm; }
+    .small-card { overflow: hidden; border: 1px solid #e5cba5; background: #fffaf0; display: grid; grid-template-rows: 17mm 1fr; min-height: 39mm; }
+    .small-card .copy { padding: 2.2mm; }
+    .small-card h3 { font-size: 8.7pt; }
+    .small-card .price { font-size: 8.8pt; }
+    .small-card p { font-size: 6.45pt; line-height: 1.26; margin-top: 1.2mm; }
+    .series-list { display: grid; gap: 2mm; }
+    .series-block { border: 1px solid #e5cba5; background: #fffaf0; padding: 2.7mm; }
+    .series-block h3 { font-size: 10pt; }
+    .price-line { display: grid; grid-template-columns: 1fr auto; gap: 2mm; align-items: baseline; padding: 1.15mm 0; border-bottom: 1px dashed rgba(129, 80, 42, .25); font-size: 8pt; color: #5e3e2a; }
+    .price-line:last-child { border-bottom: 0; }
+    .price-line strong { color: #3e2416; font-size: 8.6pt; white-space: nowrap; }
+    .two-col-lines { display: grid; grid-template-columns: 1fr 1fr; column-gap: 3mm; margin-top: 1.8mm; }
+    .mochi-grid { display: grid; grid-template-columns: 1fr; gap: 2mm; }
+    .note { margin-top: 2mm; color: var(--muted); font-size: 7pt; line-height: 1.35; }
+    .footer {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      gap: 4mm;
+      padding: 3.2mm 4mm;
+      border: 1px solid rgba(108, 62, 30, .22);
+      background: rgba(255, 250, 240, .82);
+      color: #60412c;
+      font-size: 8.5pt;
+      font-weight: 700;
+    }
+    .footer strong { color: #3e2416; font-size: 11pt; }
+    @media print {
+      html, body { background: white; }
+      .sheet { box-shadow: none; }
+    }
+  </style>
+</head>
+<body>
+  <main class="sheet" aria-label="JOJO Waffle A3 menu">
+    <div class="content">
+      <header class="hero">
+        <div class="hero-copy">
+          <div class="topline">
+            <img class="logo" src="../public/assets/products/logo-jojo-bakes.webp" alt="JOJO BAKES">
+            <div>
+              <div class="brand-kicker">Tonight's Special · Made Fresh</div>
+              <div class="brand-kicker">WAFFLE ONLY MENU</div>
+            </div>
+          </div>
+          <h1>JOJO<br>Waffle</h1>
+          <p class="hero-sub">现点现烤，选好口味后 WhatsApp 下单。菜单结构跟网站一样：推荐先看，再慢慢选经典、特别、饼干、Nutella 和麻薯。</p>
+          <div class="chips">
+            <span class="chip dark">Muslim Friendly</span>
+            <span class="chip">约 15 分钟</span>
+            <span class="chip">Cash / QR</span>
+            <span class="chip">WhatsApp 011-1078 8823</span>
+          </div>
+        </div>
+        <div class="hero-photo">
+          <img src="../public/assets/products/jojo-waffle-hero-bg.webp" alt="JOJO Waffle">
+        </div>
+      </header>
+
+      <section class="section">
+        <div class="section-head">
+          <div><span class="eyebrow">第一次点可以看这里</span><h2>JOJO 推荐</h2></div>
+          <div class="hint">网站推荐顺序：抹茶系列 · 拉丝麻薯 · 开心果 Kunafa</div>
+        </div>
+        <div class="feature-grid">
+          <article class="feature-card">
+            <img src="../public/assets/products/waffle-matcha-chocolate.webp" alt="抹茶酱搭配">
+            <div class="feature-body">
+              <div class="row"><h3>抹茶酱搭配</h3><span class="price">RM8 起</span></div>
+              <p>抹茶酱配喜欢的口味。</p>
+              <div class="options">
+                <span class="pill">抹茶酱 RM8</span><span class="pill">花生 / 巧克力 / 草莓 / 牛油 / Kaya RM9</span><span class="pill">Oreo / Lotus Crumbs / 脆脆珠 RM10</span>
+              </div>
+            </div>
+          </article>
+          <article class="feature-card">
+            <img src="../public/assets/products/waffle-mochi-pull.webp" alt="拉丝麻薯">
+            <div class="feature-body">
+              <div class="row"><h3>拉丝麻薯</h3><span class="price">RM8 起</span></div>
+              <p>内烤或外夹，再选口味。</p>
+              <div class="options">
+                <span class="pill">经典麻薯 RM8</span><span class="pill">特别麻薯 RM10</span><span class="pill">Premium RM12-RM16</span>
+              </div>
+            </div>
+          </article>
+          <article class="feature-card">
+            <img src="../public/assets/products/waffle-pistachio-kunafa.webp" alt="开心果 Kunafa 系列">
+            <div class="feature-body">
+              <div class="row"><h3>开心果 Kunafa 系列</h3><span class="price">RM11 起</span></div>
+              <p>酥脆 Kunafa 搭配开心果酱。</p>
+              <div class="options">
+                <span class="pill">开心果酱 RM11</span><span class="pill">开心果巧克力 Kunafa RM13</span><span class="pill">开心果 Kunafa RM14</span>
+              </div>
+            </div>
+          </article>
+        </div>
+      </section>
+
+      <div class="body-grid">
+        <div class="col">
+          <section class="section">
+            <div class="section-head">
+              <div><span class="eyebrow">简单好吃</span><h2>经典口味</h2></div>
+              <div class="hint">可选 1 至 2 个口味</div>
+            </div>
+            <div class="classic-box">
+              <img src="../public/assets/products/waffle-classic.webp" alt="经典口味">
+              <div>
+                <div class="row"><h3>经典口味</h3><span class="price">RM5</span></div>
+                <p>可选一或两种喜欢的口味。</p>
+                <div class="flavour-grid">
+                  <span class="flavour">巧克力</span><span class="flavour">花生</span><span class="flavour">草莓</span>
+                  <span class="flavour">牛油</span><span class="flavour">蜜糖</span><span class="flavour">Kaya</span>
+                </div>
+              </div>
+            </div>
+          </section>
+
+          <section class="section">
+            <div class="section-head">
+              <div><span class="eyebrow">固定口味</span><h2>特别口味</h2></div>
+              <div class="hint">不用选择，直接点就好</div>
+            </div>
+            <div class="small-grid">
+              <article class="small-card"><img src="../public/assets/products/waffle-matcha-chocolate.webp" alt="抹茶巧克力"><div class="copy"><div class="row"><h3>抹茶巧克力</h3><span class="price">RM9</span></div><p>推荐口味。</p></div></article>
+              <article class="small-card"><img src="../public/assets/products/waffle-matcha-lotus.webp" alt="抹茶 Lotus"><div class="copy"><div class="row"><h3>抹茶 Lotus</h3><span class="price">RM10</span></div><p>抹茶配 Lotus。</p></div></article>
+              <article class="small-card"><img src="../public/assets/products/waffle-apam-balik.webp" alt="Apam Balik Waffle"><div class="copy"><div class="row"><h3>Apam Balik Waffle</h3><span class="price">RM8</span></div><p>花生香、边边脆。</p></div></article>
+              <article class="small-card"><img src="../public/assets/products/waffle-cookies-cream-oreo.jpg" alt="Cookies & Cream"><div class="copy"><div class="row"><h3>Cookies & Cream</h3><span class="price">RM7</span></div><p>奶香饼干口味。</p></div></article>
+              <article class="small-card"><img src="../public/assets/products/waffle-taro.webp" alt="芋泥 Waffle"><div class="copy"><div class="row"><h3>芋泥 Waffle</h3><span class="price">RM8</span></div><p>芋泥比较温柔。</p></div></article>
+              <article class="small-card"><img src="../public/assets/products/waffle-mayo-chicken-floss.webp" alt="Mayo 鸡肉松"><div class="copy"><div class="row"><h3>Mayo 鸡肉松</h3><span class="price">RM8</span></div><p>咸甜口。</p></div></article>
+              <article class="small-card"><img src="../public/assets/products/waffle-chicken-floss-taro.webp" alt="鸡肉松芋泥"><div class="copy"><div class="row"><h3>鸡肉松芋泥</h3><span class="price">RM10</span></div><p>咸香鸡肉松配芋泥。</p></div></article>
+              <article class="small-card"><img src="../public/assets/products/waffle-peanut-coffee.webp" alt="巧克力咖啡"><div class="copy"><div class="row"><h3>巧克力咖啡</h3><span class="price">RM6</span></div><p>巧克力配咖啡香。</p></div></article>
+              <article class="small-card"><img src="../public/assets/products/waffle-peanut-coffee.webp" alt="花生咖啡"><div class="copy"><div class="row"><h3>花生咖啡</h3><span class="price">RM6</span></div><p>花生配咖啡香。</p></div></article>
+            </div>
+          </section>
+        </div>
+
+        <div class="col">
+          <section class="section">
+            <div class="section-head">
+              <div><span class="eyebrow">选一种喜欢的饼干口味</span><h2>饼干系列</h2></div>
+              <div class="hint">Oreo · Lotus · 脆脆珠</div>
+            </div>
+            <div class="series-list">
+              <div class="series-block">
+                <div class="row"><h3>Oreo 系列</h3><span class="price">RM7 起</span></div>
+                <p>每份都有 Oreo 饼干碎，选一种口味。</p>
+              </div>
+              <div class="series-block">
+                <div class="row"><h3>Lotus 系列</h3><span class="price">RM7 起</span></div>
+                <p>每份都有 Lotus 碎，选一种口味。</p>
+              </div>
+              <div class="series-block">
+                <div class="row"><h3>脆脆珠系列</h3><span class="price">RM7 起</span></div>
+                <p>每份都有脆脆珠，选一种口味。</p>
+              </div>
+              <div class="two-col-lines">
+                <div>
+                  <div class="price-line"><span>经典口味 + Cookies & Cream</span><strong>RM7</strong></div>
+                  <div class="price-line"><span>抹茶 / 芋泥 / Nutella</span><strong>RM10</strong></div>
+                </div>
+                <div>
+                  <div class="price-line"><span>开心果</span><strong>RM13</strong></div>
+                  <div class="price-line"><span>适用于 Oreo / Lotus / 脆脆珠</span><strong></strong></div>
+                </div>
+              </div>
+            </div>
+          </section>
+
+          <section class="section">
+            <div class="section-head">
+              <div><span class="eyebrow">Nutella 榛果巧克力酱已包含</span><h2>Nutella 系列</h2></div>
+              <div class="hint">RM8 起</div>
+            </div>
+            <div class="classic-box">
+              <img src="../public/assets/products/waffle-nutella.webp" alt="Nutella 系列">
+              <div>
+                <div class="price-line"><span>Nutella 本身</span><strong>RM8</strong></div>
+                <div class="price-line"><span>加一个经典口味</span><strong>RM9</strong></div>
+                <div class="options">
+                  <span class="pill">巧克力</span><span class="pill">花生</span><span class="pill">草莓</span><span class="pill">牛油</span><span class="pill">蜜糖</span><span class="pill">Kaya</span>
+                </div>
+              </div>
+            </div>
+          </section>
+
+          <section class="section">
+            <div class="section-head">
+              <div><span class="eyebrow">内烤或外夹，再选口味</span><h2>拉丝麻薯</h2></div>
+              <div class="hint">网站麻薯等级</div>
+            </div>
+            <div class="mochi-grid">
+              <div class="series-block">
+                <div class="row"><h3>麻薯方式</h3><span class="price">先选</span></div>
+                <div class="options"><span class="pill">内烤麻薯</span><span class="pill">外夹麻薯</span></div>
+              </div>
+              <div class="series-block">
+                <div class="row"><h3>经典麻薯口味</h3><span class="price">RM8</span></div>
+                <p>选两种：巧克力、花生、草莓、牛油、蜜糖、Kaya。</p>
+              </div>
+              <div class="series-block">
+                <div class="row"><h3>特别麻薯口味</h3><span class="price">RM10</span></div>
+                <p>选一种：抹茶、抹茶巧克力、Cookies & Cream、芋泥、Apam Balik、Nutella。</p>
+              </div>
+              <div class="series-block">
+                <div class="row"><h3>Premium 麻薯口味</h3><span class="price">RM12 起</span></div>
+                <div class="two-col-lines">
+                  <div>
+                    <div class="price-line"><span>芋泥鸡肉松</span><strong>RM12</strong></div>
+                    <div class="price-line"><span>鸡肉松芋泥麻薯</span><strong>RM12</strong></div>
+                    <div class="price-line"><span>开心果</span><strong>RM13</strong></div>
+                  </div>
+                  <div>
+                    <div class="price-line"><span>开心果巧克力 Kunafa</span><strong>RM15</strong></div>
+                    <div class="price-line"><span>开心果 Kunafa</span><strong>RM16</strong></div>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </section>
+        </div>
+      </div>
+
+      <footer class="footer">
+        <span><strong>JOJO BAKES</strong> · 夜市华夫饼 · 现点现烤</span>
+        <span>取餐时间请以 WhatsApp 确认为准</span>
+      </footer>
+    </div>
+  </main>
+</body>
+</html>

@@ -239,12 +239,12 @@ const blackSesameExtraFlavours = [
 ];
 
 const blackSesameOptions = [
-  { id: 'black-sesame', name: { zh: '黑芝麻', en: 'Black Sesame' }, price: 9, label: { zh: '选择口味', en: 'Choose Flavour' } },
+  { id: 'black-sesame', name: { zh: '无糖黑芝麻', en: 'Black Sesame' }, price: 9, label: { zh: '选择口味', en: 'Choose Flavour' } },
   ...blackSesameExtraFlavours.map((flavour) => ({
     id: `black-sesame-${flavour.id}`,
     name: {
-      zh: `黑芝麻 + ${text(flavour.name, 'zh')}`,
-      en: `Black Sesame + ${text(flavour.name, 'en')}`,
+      zh: `无糖黑芝麻 + ${text(flavour.name, 'zh')}`,
+      en: `Unsweet Black Sesame + ${text(flavour.name, 'en')}`,
     },
     price: 9 + flavour.price,
     label: { zh: '选择口味', en: 'Choose Flavour' },
